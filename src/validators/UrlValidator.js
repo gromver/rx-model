@@ -1,5 +1,5 @@
-import Validator from './Validator'
-import utils from '../utils'
+import Validator from './Validator';
+import utils from '../utils';
 
 export default class UrlValidator extends Validator {
   static MESSAGE = '{attribute} - is not a valid url';
@@ -7,25 +7,25 @@ export default class UrlValidator extends Validator {
   constructor({
                     message,
                     schemes = ['http', 'https'],
-                    allowLocal = false
+                    allowLocal = false,
     } = {}) {
-    super()
+    super();
 
-    this.message = message
-    this.schemes = schemes
-    this.allowLocal = allowLocal
+    this.message = message;
+    this.schemes = schemes;
+    this.allowLocal = allowLocal;
   }
 
   validate(value, attribute) {
         // Empty values are fine
     if (!utils.isDefined(value)) {
-      return Promise.resolve()
+      return Promise.resolve();
     }
 
     if (!utils.isString(value)) {
       return Promise.reject(this.createMessage(this.message || UrlValidator.MESSAGE, {
-        attribute
-      }))
+        attribute,
+      }));
     }
 
         // https://gist.github.com/dperini/729294
@@ -35,20 +35,19 @@ export default class UrlValidator extends Validator {
             '(?:(?:'}${this.schemes.join('|')})://)` +
             // user:pass authentication
             '(?:\\S+(?::\\S*)?@)?' +
-            '(?:'
+            '(?:';
 
-    let tld = '(?:\\.(?:[a-z\\u00a1-\\uffff]{2,}))'
+    let tld = '(?:\\.(?:[a-z\\u00a1-\\uffff]{2,}))';
 
     if (this.allowLocal) {
-      tld += '?'
-    }
-    else {
+      tld += '?';
+    } else {
       regex +=
                 // IP address exclusion
                 // private & local networks
                 '(?!(?:10|127)(?:\\.\\d{1,3}){3})' +
                 '(?!(?:169\\.254|192\\.168)(?:\\.\\d{1,3}){2})' +
-                '(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})'
+                '(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})';
     }
 
     regex +=
@@ -71,17 +70,17 @@ export default class UrlValidator extends Validator {
             '(?::\\d{2,5})?' +
             // resource path
             '(?:[/?#]\\S*)?' +
-            '$'
+            '$';
 
-    const PATTERN = new RegExp(regex, 'i')
+    const PATTERN = new RegExp(regex, 'i');
 
     if (!PATTERN.exec(value)) {
       return Promise.reject(this.createMessage(this.message || UrlValidator.MESSAGE, {
-        attribute
-      }))
+        attribute,
+      }));
     }
 
-    return Promise.resolve()
+    return Promise.resolve();
   }
 }
 

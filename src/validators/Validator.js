@@ -1,23 +1,23 @@
-import Message from './Message'
-import {Map} from 'immutable'
+import Message from './Message';
+import { Map } from 'immutable';
 
 export default class Validator {
   createMessage(message, bindings) {
-    return new Message(message, bindings)
+    return new Message(message, bindings);
   }
 
   validate(value, attribute, model) {
-    return Promise.resolve()
+    return Promise.resolve();
   }
 
   static is(a, b) {
-    if (a === b) return true
+    if (a === b) return true;
 
     if (a instanceof Validator && b instanceof Validator && a.constructor === b.constructor) {
-      return a.equals(b)
+      return a.equals(b);
     }
 
-    return false
+    return false;
   }
 
   __hash;
@@ -31,66 +31,65 @@ export default class Validator {
      * @returns {Validator}
      */
   cache(bool) {
-    this.__isCached = bool
+    this.__isCached = bool;
 
-    return this
+    return this;
   }
 
   duration(milliseconds) {
     if (milliseconds) {
-      this.__getTrueValue = this.throttledTrueValue(milliseconds)
-    }
-    else {
-      this.__getTrueValue = undefined
+      this.__getTrueValue = this.throttledTrueValue(milliseconds);
+    } else {
+      this.__getTrueValue = undefined;
     }
 
-    return this
+    return this;
   }
 
     // valueObject interface implementation
   equals(other) {
     if (this.hashCode() === other.hashCode()) {
       const isCached = this.__isCached && other.__isCached,
-        getTrueValue = this.__getTrueValue || other.__getTrueValue
+        getTrueValue = this.__getTrueValue || other.__getTrueValue;
 
-      return isCached ? true : (getTrueValue ? getTrueValue() : false)
+      return isCached ? true : (getTrueValue ? getTrueValue() : false);
     }
-    return false
+    return false;
   }
 
   throttledTrueValue(duration) {
-    let isThrottled = false
+    let isThrottled = false;
 
     return () => {
       if (!isThrottled) {
-        isThrottled = true
+        isThrottled = true;
 
         setTimeout(() => {
-          isThrottled = false
-        }, duration)
+          isThrottled = false;
+        }, duration);
 
-        return true
+        return true;
       }
-      return false
-    }
+      return false;
+    };
   }
 
   hashCode() {
     if (this.__hash) {
-      return this.__hash
+      return this.__hash;
     }
-    const props = {}
+    const props = {};
 
-    const exclude = /^__/
+    const exclude = /^__/;
 
     Object.entries(this).forEach(([k, v]) => {
       if (!exclude.test(k)) {
-        props[k] = v
+        props[k] = v;
       }
-    })
+    });
 
-    const map = new Map(props)
+    const map = new Map(props);
 
-    return this.__hash = map.hashCode()
+    return this.__hash = map.hashCode();
   }
 }

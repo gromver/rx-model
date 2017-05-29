@@ -1,5 +1,5 @@
-import Validator from './Validator'
-import utils from '../utils'
+import Validator from './Validator';
+import utils from '../utils';
 
 export default class StringValidator extends Validator {
   static MESSAGE_NOT_STRING = '{attribute} - must be a string';
@@ -15,65 +15,65 @@ export default class StringValidator extends Validator {
                     maxLength,
                     minLength,
                     pattern,
-                    flags
+                    flags,
     } = {}) {
-    super()
+    super();
 
-    this.messageNotString = messageNotString
-    this.messageMaxLength = messageMaxLength
-    this.messageMinLength = messageMinLength
-    this.messagePattern = messagePattern
-    this.maxLength = maxLength
-    this.minLength = minLength
-    this.pattern = pattern
-    this.flags = flags
+    this.messageNotString = messageNotString;
+    this.messageMaxLength = messageMaxLength;
+    this.messageMinLength = messageMinLength;
+    this.messagePattern = messagePattern;
+    this.maxLength = maxLength;
+    this.minLength = minLength;
+    this.pattern = pattern;
+    this.flags = flags;
   }
 
   validate(value, attribute) {
         // Empty values are fine
     if (!utils.isDefined(value)) {
-      return Promise.resolve()
+      return Promise.resolve();
     }
 
     if (!utils.isString(value)) {
       return Promise.reject(this.createMessage(this.messageNotString || StringValidator.MESSAGE_NOT_STRING, {
-        attribute
-      }))
+        attribute,
+      }));
     }
 
-    const length = value.length
+    const length = value.length;
 
     if (this.minLength && utils.isNumber(this.minLength) && !(length >= this.minLength)) {
       return Promise.reject(this.createMessage(this.messageMinLength || StringValidator.MESSAGE_MIN_LENGTH, {
         attribute,
-        count: this.minLength
-      }))
+        count: this.minLength,
+      }));
     }
 
     if (this.maxLength && utils.isNumber(this.maxLength) && !(length <= this.maxLength)) {
       return Promise.reject(this.createMessage(this.messageMaxLength || StringValidator.MESSAGE_MAX_LENGTH, {
         attribute,
-        count: this.maxLength
-      }))
+        count: this.maxLength,
+      }));
     }
 
-    let pattern = this.pattern
+    let pattern = this.pattern;
 
     if (pattern) {
       if (utils.isString(pattern)) {
-        pattern = new RegExp(pattern, this.flags)
+        pattern = new RegExp(pattern, this.flags);
       }
 
-      const match = pattern.exec(value)
+      const match = pattern.exec(value);
 
       if (!match) {
         return Promise.reject(this.createMessage(this.messagePattern || StringValidator.MESSAGE_PATTERN, {
-          attribute
-        }))
+          attribute,
+        }));
       }
     }
 
-    return Promise.resolve()
+    return Promise.resolve();
   }
 }
 

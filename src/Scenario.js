@@ -18,27 +18,27 @@ export default class Scenario {
 
   constructor(apply, scenarios, validator) {
     if (!(apply === Scenario.APPLY_EXCEPT || apply === Scenario.APPLY_IN)) {
-      throw new Error('Scenario::constructor apply property has invalid value')
+      throw new Error('Scenario::constructor apply property has invalid value');
     }
 
     if (!Array.isArray(scenarios)) {
-      throw new Error('Scenario::constructor scenarios property must be an array')
+      throw new Error('Scenario::constructor scenarios property must be an array');
     }
 
     if (!validator) {
-      throw new Error('Scenario::constructor validator property must be set')
+      throw new Error('Scenario::constructor validator property must be set');
     }
 
-    this.apply = apply
-    this.scenarios = scenarios
-    this.validator = validator
+    this.apply = apply;
+    this.scenarios = scenarios;
+    this.validator = validator;
   }
 
   static in(scenarios, validator) {
-    return new Scenario(Scenario.APPLY_IN, scenarios, validator)
+    return new Scenario(Scenario.APPLY_IN, scenarios, validator);
   }
 
   static except(scenarios, validator) {
-    return new Scenario(Scenario.APPLY_EXCEPT, scenarios, validator)
+    return new Scenario(Scenario.APPLY_EXCEPT, scenarios, validator);
   }
 }

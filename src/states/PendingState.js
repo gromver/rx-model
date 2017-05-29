@@ -2,8 +2,8 @@
  * Created by roman on 25.04.17.
  */
 
-import React from 'react'
-import State from './State'
+import React from 'react';
+import State from './State';
 
 export default class PendingState extends State {
   static LOADING_MESSAGE = <span><i className="fa fa-fw fa-circle-o-notch fa-spin" /> Обработка</span>;
@@ -15,13 +15,13 @@ export default class PendingState extends State {
         // super(PendingState.LOADING_MESSAGE);
     super({
       message: PendingState.LOADING_MESSAGE,
-      ...options
-    })
+      ...options,
+    });
 
-    this.rejectFn = rejectFn
+    this.rejectFn = rejectFn;
   }
 
   abort() {
-    this.rejectFn()
+    this.rejectFn();
   }
 }

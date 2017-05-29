@@ -1,12 +1,12 @@
-import {Model} from '../..'
-import {MultiValidator, PresenceValidator, UrlValidator, CustomValidator} from '../../validators'
+import { Model } from '../..';
+import { MultiValidator, PresenceValidator, UrlValidator, CustomValidator } from '../../validators';
 
 export default class ValidatorsModel extends Model {
   prepareSourceData(data) {
     return {
       ...data,
-      url: ''
-    }
+      url: '',
+    };
   }
 
   rules() {
@@ -20,15 +20,14 @@ export default class ValidatorsModel extends Model {
           func: (value, attribute) => new Promise((resolve, reject) => {
             setTimeout(() => {
               if (value === 'http://yandex.ru') {
-                resolve()
+                resolve();
+              } else {
+                reject(`${value} is wrong!`);
               }
-              else {
-                reject(`${value} is wrong!`)
-              }
-            }, 500)
-          })
-        })
-      ]
-    }
+            }, 500);
+          }),
+        }),
+      ],
+    };
   }
 }

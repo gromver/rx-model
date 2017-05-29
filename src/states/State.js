@@ -6,8 +6,8 @@ export default class State {
   attribute;
   message;
 
-  constructor({attribute, message}) {
-    this.attribute = attribute
-    this.message = message
+  constructor({ attribute, message }) {
+    this.attribute = attribute;
+    this.message = message;
   }
 }
