@@ -1,4 +1,4 @@
-import { fromJS, Iterable } from 'immutable';
+import { fromJS, Iterable, Map } from 'immutable';
 import { Subject } from 'rxjs/Subject';
 import { SuccessState, WarningState, ErrorState, PendingState } from './states';
 import StateTracker from './StateTracker';
@@ -12,13 +12,13 @@ export default class Model {
 
   /**
    * Current attributes map
-   * @type {Iterable}
+   * @type {Immutable.Map}
    */
   attributes;
 
   /**
    * Initial attributes map
-   * @type {Iterable}
+   * @type {Immutable.Map}
    */
   initialAttributes;
 
@@ -229,7 +229,6 @@ export default class Model {
    * @param value
    */
   set(attribute, value) {
-        // this.modelProcessor.changeAttribute(attribute, value);
     this.attributes = this.attributes.setIn(utils.resolveAttribute(attribute), value);
 
     this.stateTracker.changingAttribute(attribute);
@@ -394,16 +393,12 @@ export default class Model {
    * @param attributes{Array|string}
    * @returns {Promise.<boolean>}
    */
-  validate(attributes = null) {
+  validate(attributes) {
     const validators = this.getValidators();
 
-    let attrsToCheck;
+    let attrsToCheck = (typeof attributes === 'string' ? [attributes] : attributes) || [];
 
-    if (typeof attributes === 'string') {
-      attrsToCheck = [attributes];
-    }
-
-    if (!attrsToCheck) {
+    if (!attrsToCheck.length) {
       attrsToCheck = this.scenarios[this.scenario] || Object.keys(validators);
     }
 
