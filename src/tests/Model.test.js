@@ -2,6 +2,7 @@ import { SuccessState, PendingState, WarningState, ErrorState, PristineState } f
 import { MultiValidator, PresenceValidator, UrlValidator, CustomValidator } from '../validators';
 import { Map } from 'immutable';
 import ValidatorsModel from './models/ValidatorsModel';
+import RulesTestModel from './models/RulesTestModel';
 
 describe('Test Model.js', () => {
   const data = { presence: 'bar' };
@@ -17,12 +18,33 @@ describe('Test Model.js', () => {
     });
   });
 
-  test('normalizeRules', () => {
-    expect(model.normalizeRules()).toEqual(expect.objectContaining({
-      presence: expect.any(PresenceValidator),
-      url: expect.any(UrlValidator),
-      multi: expect.any(MultiValidator),
-    }));
+  test('getValidators', () => {
+    const model = new RulesTestModel();
+
+    const validators = model.getValidators();
+
+    expect(validators).toEqual({
+      instance: new PresenceValidator(),
+      func: new PresenceValidator(),
+      array: new MultiValidator({
+        validators: [
+          new PresenceValidator(),
+          new UrlValidator()
+        ]
+      }),
+      arrayWithFunc: new MultiValidator({
+        validators: [
+          new PresenceValidator(),
+          new UrlValidator()
+        ]
+      }),
+      funcWithFunc: new PresenceValidator(),
+      funcWithFunc2: new MultiValidator({
+        validators: [
+          new PresenceValidator(),
+        ]
+      }),
+    })
   });
 
   test('setAttributes', () => {

@@ -154,6 +154,7 @@ export default class Model {
     if (this.validators) {
       return this.validators;
     }
+
     const rules = this.normalizeRules();
 
     this.setValidators(rules);
@@ -175,52 +176,42 @@ export default class Model {
         return;
       }
 
-      if (typeof validator === 'function') {
-        validator = validator.call(this);
-      } else if (validator instanceof Scenario) {
-        if (validator.apply === Scenario.APPLY_IN ? validator.scenarios.indexOf(this.scenario) !== -1 : validator.scenarios.indexOf(this.scenario) === -1) {
-          validator = validator.validator;
-        } else {
-          return; // skip
-        }
-      } else if (Array.isArray(validator)) {
-        validator = new MultiValidator({
-          validators: this.normalizeValidatorsArray(validator),
-        });
-      }
+      const normalizedValidator = this.normalizeValidator(validator);
 
-      if (!(validator instanceof Validator)) {
-        throw new Error('buildRules - правила должны быть наследниками Validator');
+      if (normalizedValidator) {
+        rules[attribute] = normalizedValidator;
       }
-
-      rules[attribute] = validator;
     });
 
     return rules;
   }
 
-  normalizeValidatorsArray(items) {
-    return items.map((item) => {
-      let validator;
-
-      if (typeof item === 'function') {
-        validator = item.call(this);
-      } else {
-        validator = item;
-      }
-
-      if (!(validator instanceof Validator)) {
-        throw new Error('normalizeValidatorsArray - правила должны быть наследниками Validator');
-      }
-
+  normalizeValidator(validator) {
+    if (validator instanceof Validator) {
       return validator;
-    });
+    } else if (typeof validator === 'function') {
+      return this.normalizeValidator(validator.call(this));
+    } else if (validator instanceof Scenario) {
+      if (validator.apply === Scenario.APPLY_IN ? validator.scenarios.indexOf(this.scenario) !== -1 : validator.scenarios.indexOf(this.scenario) === -1) {
+        return this.normalizeValidator(validator.validator);
+      } else {
+        return false; // skip
+      }
+    } else if (Array.isArray(validator)) {
+      return new MultiValidator({
+        validators: validator.map((item) => this.normalizeValidator(item)).filter(i => i !== false),
+      });
+    } else if (validator === false) {
+      // false etc
+      return false; // skip
+    } else {
+      throw new Error('rules - unknown validator description');
+    }
   }
 
   invalidateValidators() {
-    this.validators = null;
+    this.validators = undefined;
   }
-
 
   /**
    * Set attribute value
