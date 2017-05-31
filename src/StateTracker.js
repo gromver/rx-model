@@ -2,7 +2,7 @@ import { is } from 'immutable';
 import { PendingState, SuccessState, WarningState, ErrorState, PristineState } from './states';
 import utils from './utils';
 
-export default class StateTracker {
+export class StateTracker {
   constructor(onPushState) {
     this.onPushState = onPushState;
   }

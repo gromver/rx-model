@@ -1,5 +1,5 @@
-import Model from './Model';
-import StateTracker from './StateTracker';
+import { Model } from './Model';
+import { StateTracker } from './StateTracker';
 
 export {
   Model,
