@@ -1,13 +1,13 @@
 import { fromJS, Iterable, Map } from 'immutable';
 import { Subject } from 'rxjs/Subject';
 import { SuccessState, WarningState, ErrorState, PendingState, PristineState } from './states';
-import { StateTracker } from './StateTracker';
+import StateTracker from './StateTracker';
 import Scenario from './Scenario';
 import { Message, Validator, MultiValidator } from './validators';
 import ModelStateSubject from './rx/ModelStateSubject';
 import utils from './utils';
 
-export class Model {
+class Model {
   static SCENARIO_DEFAULT = 'default';
 
   /**
@@ -522,3 +522,5 @@ export class Model {
     return this.getObservable().when(attributes).whenError(attributes).subscribe(fn.bind(this));
   }
 }
+
+export default Model;
