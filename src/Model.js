@@ -7,7 +7,7 @@ import { Message, Validator, MultiValidator } from './validators';
 import ModelStateSubject from './rx/ModelStateSubject';
 import utils from './utils';
 
-const Model = class {
+export default class Model {
   static SCENARIO_DEFAULT = 'default';
 
   /**
@@ -522,5 +522,3 @@ const Model = class {
     return this.getObservable().when(attributes).whenError(attributes).subscribe(fn.bind(this));
   }
 };
-
-export default Model;
