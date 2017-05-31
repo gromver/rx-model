@@ -82,6 +82,10 @@ export default class StateTracker {
     return Promise.resolve(this.getAttributeState(attribute));
   }
 
+  /**
+   * remove?
+   * @param attribute
+   */
   changingAttribute(attribute) {
     const state = new PristineState({
       attribute,

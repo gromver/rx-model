@@ -1,6 +1,6 @@
 import { fromJS, Iterable, Map } from 'immutable';
 import { Subject } from 'rxjs/Subject';
-import { SuccessState, WarningState, ErrorState, PendingState } from './states';
+import { SuccessState, WarningState, ErrorState, PendingState, PristineState } from './states';
 import StateTracker from './StateTracker';
 import Scenario from './Scenario';
 import { Message, Validator, MultiValidator } from './validators';
@@ -221,8 +221,6 @@ export default class Model {
    */
   set(attribute, value) {
     this.attributes = this.attributes.setIn(utils.resolveAttribute(attribute), value);
-
-    this.stateTracker.changingAttribute(attribute);
   }
 
   /**
@@ -410,6 +408,90 @@ export default class Model {
 
       return Promise.resolve(true);
     });
+  }
+
+  /**
+   * Attribute state management
+   */
+
+  /**
+   * Change the attributes states to PristineState
+   * @param attributes{Array<string>}
+   */
+  markAsPristine(attributes) {
+    attributes.forEach(attribute => {
+      const state = new PristineState({
+        attribute
+      });
+      
+      this.stateTracker.setAttributeState(attribute, state);
+      
+      this.stateTracker.pushState(state);
+    })
+  }
+
+  /**
+   * Change the attributes states to PendingState
+   * @param attributes{Array<string>}
+   */
+  markAsPending(attributes) {
+    attributes.forEach(attribute => {
+      const state = new PendingState({
+        attribute
+      });
+
+      this.stateTracker.setAttributeState(attribute, state);
+
+      this.stateTracker.pushState(state);
+    })
+  }
+
+  /**
+   * Change the attributes states to SuccessState
+   * @param attributes{Array<string>}
+   */
+  markAsSuccess(attributes) {
+    attributes.forEach(attribute => {
+      const state = new SuccessState({
+        attribute
+      });
+
+      this.stateTracker.setAttributeState(attribute, state);
+
+      this.stateTracker.pushState(state);
+    })
+  }
+
+  /**
+   * Change the attributes states to WarningState
+   * @param attributes{Array<string>}
+   */
+  markAsWarning(attributes) {
+    attributes.forEach(attribute => {
+      const state = new WarningState({
+        attribute
+      });
+
+      this.stateTracker.setAttributeState(attribute, state);
+
+      this.stateTracker.pushState(state);
+    })
+  }
+
+  /**
+   * Change the attributes states to ErrorState
+   * @param attributes{Array<string>}
+   */
+  markAsError(attributes) {
+    attributes.forEach(attribute => {
+      const state = new ErrorState({
+        attribute
+      });
+
+      this.stateTracker.setAttributeState(attribute, state);
+
+      this.stateTracker.pushState(state);
+    })
   }
 
   /**
