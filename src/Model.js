@@ -7,7 +7,7 @@ import { Message, Validator, MultiValidator } from './validators';
 import ModelStateSubject from './rx/ModelStateSubject';
 import utils from './utils';
 
-class Model {
+const Model = class {
   static SCENARIO_DEFAULT = 'default';
 
   /**
@@ -101,7 +101,7 @@ class Model {
    * то есть без наследования либо объектом Immutable.Map
    * Важно! описывать логику получения модели исходя из того, что state еще не инициализирован -
    * то есть, писать логику на основе this.props
-   * @param model
+   * @param data
    * @returns {{}}
    */
   prepareSourceData(data) {
@@ -521,6 +521,6 @@ class Model {
   whenError(attributes, fn) {
     return this.getObservable().when(attributes).whenError(attributes).subscribe(fn.bind(this));
   }
-}
+};
 
 export default Model;
