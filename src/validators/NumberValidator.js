@@ -31,7 +31,7 @@ export default class NumberValidator extends Validator {
                     equalTo,
                     lessThan,
                     lessThanOrEqualTo,
-                    divisibleBy = 0,
+                    divisibleBy,
                     odd = false,
                     even = false,
 
@@ -66,7 +66,7 @@ export default class NumberValidator extends Validator {
       return Promise.resolve();
     }
 
-        // Strict will check that it is a valid looking number
+    // Strict will check that it is a valid looking number
     if (utils.isString(value) && this.strict) {
       let pattern = '^(0|[1-9]\\d*)';
       if (!this.onlyInteger) {
@@ -81,77 +81,77 @@ export default class NumberValidator extends Validator {
       }
     }
 
-        // Coerce the value to a number unless we're being strict.
-        // if (options.noStrings !== true && utils.isString(value) && !utils.isEmpty(value)) {
-        //     value = +value;
-        // }
+    // Coerce the value to a number unless we're being strict.
+    // if (options.noStrings !== true && utils.isString(value) && !utils.isEmpty(value)) {
+    //     value = +value;
+    // }
 
     value = +value;
 
-        // If it's not a number we shouldn't continue since it will compare it.
+    // If it's not a number we shouldn't continue since it will compare it.
     if (!utils.isNumber(value)) {
       return Promise.reject(this.createMessage(this.messageNotNumber || NumberValidator.MESSAGE_NOT_NUMBER, {
         attribute,
       }));
     }
 
-        // Same logic as above, sort of. Don't bother with comparisons if this
-        // doesn't pass.
-    if (this.onlyInteger && !utils.isInteger(value)) {
+    // Same logic as above, sort of. Don't bother with comparisons if this
+    // doesn't pass.
+    if (this.onlyInteger !== undefined && !utils.isInteger(value)) {
       return Promise.reject(this.createMessage(this.messageOnlyInteger || NumberValidator.MESSAGE_ONLY_INTEGER, {
         attribute,
       }));
     }
 
-    if (this.greaterThan && utils.isNumber(this.greaterThan) && !(value > this.greaterThan)) {
+    if (this.greaterThan !== undefined && utils.isNumber(this.greaterThan) && !(value > this.greaterThan)) {
       return Promise.reject(this.createMessage(this.messageGreaterThan || NumberValidator.MESSAGE_GREATER_THAN, {
         attribute,
         count: this.greaterThan,
       }));
     }
 
-    if (this.greaterThanOrEqualTo && utils.isNumber(this.greaterThanOrEqualTo) && !(value >= this.greaterThanOrEqualTo)) {
+    if (this.greaterThanOrEqualTo !== undefined && utils.isNumber(this.greaterThanOrEqualTo) && !(value >= this.greaterThanOrEqualTo)) {
       return Promise.reject(this.createMessage(this.messageGreaterThanOrEqualTo || NumberValidator.MESSAGE_GREATER_THAN_OR_EQUAL_TO, {
         attribute,
         count: this.greaterThanOrEqualTo,
       }));
     }
 
-    if (this.equalTo && utils.isNumber(this.equalTo) && !(value === this.equalTo)) {
+    if (this.equalTo !== undefined && utils.isNumber(this.equalTo) && !(value === this.equalTo)) {
       return Promise.reject(this.createMessage(this.messageEqualTo || NumberValidator.MESSAGE_EQUAL_TO, {
         attribute,
         count: this.equalTo,
       }));
     }
 
-    if (this.lessThan && utils.isNumber(this.lessThan) && !(value < this.lessThan)) {
+    if ((this.lessThan !== undefined) && utils.isNumber(this.lessThan) && !(value < this.lessThan)) {
       return Promise.reject(this.createMessage(this.messageLessThan || NumberValidator.MESSAGE_LESS_THAN, {
         attribute,
         count: this.lessThan,
       }));
     }
 
-    if (this.lessThanOrEqualTo && utils.isNumber(this.lessThanOrEqualTo) && !(value <= this.lessThanOrEqualTo)) {
+    if (this.lessThanOrEqualTo !== undefined && utils.isNumber(this.lessThanOrEqualTo) && !(value <= this.lessThanOrEqualTo)) {
       return Promise.reject(this.createMessage(this.messageLessThanOrEqualTo || NumberValidator.MESSAGE_LESS_THAN_OR_EQUAL_TO, {
         attribute,
         count: this.lessThanOrEqualTo,
       }));
     }
 
-    if (this.divisibleBy && utils.isNumber(this.divisibleBy) && !(value % this.divisibleBy === 0)) {
+    if (this.divisibleBy !== undefined && utils.isNumber(this.divisibleBy) && !(value % this.divisibleBy === 0)) {
       return Promise.reject(this.createMessage(this.messageDivisibleBy || NumberValidator.MESSAGE_DIVISIBLE_BY, {
         attribute,
         count: this.divisibleBy,
       }));
     }
 
-    if (this.odd && value % 2 !== 1) {
+    if (this.odd === true && Math.abs(value) % 2 !== 1) {
       return Promise.reject(this.createMessage(this.messageNotOdd || NumberValidator.MESSAGE_NOT_ODD, {
         attribute,
       }));
     }
 
-    if (this.even && value % 2 !== 0) {
+    if (this.even === true && Math.abs(value) % 2 !== 0) {
       return Promise.reject(this.createMessage(this.messageNotEven || NumberValidator.MESSAGE_NOT_EVEN, {
         attribute,
       }));
