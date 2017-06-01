@@ -120,5 +120,73 @@ describe('getFirstError life cycle', () => {
     model.set('url', 'abc');
 
     expect(model.isModelChanged()).toBe(true);
-  })
+  });
+
+  test('getEditableAttributes()', () => {
+    const model = new ValidatorsModel();
+
+    model.setScenario(ValidatorsModel.SCENARIO_A);
+
+    expect(model.getEditableAttributes()).toEqual(['presence']);
+
+    model.setScenario([ValidatorsModel.SCENARIO_A]);
+
+    expect(model.getEditableAttributes()).toEqual(['presence']);
+
+    model.setScenario([ValidatorsModel.SCENARIO_A, ValidatorsModel.SCENARIO_B]);
+
+    expect(model.getEditableAttributes()).toEqual(['presence', 'multi']);
+  });
+
+  test('isScenario()', () => {
+    const model = new ValidatorsModel();
+
+    model.setScenario(ValidatorsModel.SCENARIO_A);
+
+    expect(model.isScenario(ValidatorsModel.SCENARIO_A)).toBe(true);
+    expect(model.isScenario(ValidatorsModel.SCENARIO_B)).toBe(false);
+
+    model.setScenario([ValidatorsModel.SCENARIO_A, ValidatorsModel.SCENARIO_B]);
+
+    expect(model.isScenario(ValidatorsModel.SCENARIO_A)).toBe(true);
+    expect(model.isScenario(ValidatorsModel.SCENARIO_B)).toBe(true);
+  });
+
+  test('multi scenario validation', async () => {
+    const model = new ValidatorsModel();
+
+    model.setScenario(ValidatorsModel.SCENARIO_A);
+    let result = await model.validate();
+    expect(result).toBe(false);
+
+    model.set('presence', 'value');
+    result = await model.validate();
+    expect(result).toBe(true);
+
+    model.setScenario([ValidatorsModel.SCENARIO_A, ValidatorsModel.SCENARIO_B]);
+    result = await model.validate();
+    expect(result).toBe(false);
+
+    model.set('multi', 'http://yandex.ru');
+    result = await model.validate();
+    expect(result).toBe(true);
+  });
+
+  test('isAttributeEditable()', () => {
+    const model = new ValidatorsModel();
+
+    expect(model.isAttributeEditable('presence')).toBe(true);
+    expect(model.isAttributeEditable('url')).toBe(true);
+    expect(model.isAttributeEditable('multi')).toBe(true);
+
+    model.setScenario(ValidatorsModel.SCENARIO_A);
+    expect(model.isAttributeEditable('presence')).toBe(true);
+    expect(model.isAttributeEditable('url')).toBe(false);
+    expect(model.isAttributeEditable('multi')).toBe(false);
+
+    model.setScenario([ValidatorsModel.SCENARIO_A, ValidatorsModel.SCENARIO_B]);
+    expect(model.isAttributeEditable('presence')).toBe(true);
+    expect(model.isAttributeEditable('url')).toBe(false);
+    expect(model.isAttributeEditable('multi')).toBe(true);
+  });
 });

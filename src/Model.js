@@ -40,17 +40,10 @@ export default class Model {
   validators;
 
   /**
-   * @type {string}
+   * Current model's scenarios
+   * @type {Array<string>}
    */
-  scenario;
-
-  /**
-   * ключ сценарий => значение [ ...список аттрибутов валидируемых для этого сценария ]
-   * если по ключу нет сценария то все аттрибуты валидируются если нет спец условий
-   * (Scenario.in(...), Scenario.except(...))
-   * @type {{}}
-   */
-  scenarios = {};
+  currentScenarios;
 
   constructor(data = {}, scenario = Model.SCENARIO_DEFAULT) {
     const map = fromJS(this.prepareSourceData(data));
@@ -96,6 +89,18 @@ export default class Model {
 
   /**
    * EXTEND THIS
+   * get model's scenarios
+   * ключ сценарий => значение [ ...список аттрибутов валидируемых для этого сценария ]
+   * если по ключу нет сценария то все аттрибуты валидируются если нет спец условий
+   * (Scenario.in(...), Scenario.except(...))
+   * @returns {{}}
+   */
+  scenarios() {
+    return {};
+  }
+
+  /**
+   * EXTEND THIS
    * инициализация и подготовка модели с которой будет работать форма
    * Важно! возвращаемый объект должен быть простым -
    * то есть без наследования либо объектом Immutable.Map
@@ -130,20 +135,33 @@ export default class Model {
    * scenarios
    */
 
+  /**
+   * Установка сценария
+   * Сценариев может быть несколько
+   * @param scenario <Array<string>|string>
+   */
   setScenario(scenario) {
-    this.scenario = scenario;
+    this.currentScenarios = typeof scenario === 'string' ? [scenario] : scenario;
 
     this.stateTracker = new StateTracker(this.onStateChange);
 
-    this.validators = undefined;
+    this.invalidateValidators();
   }
 
+  /**
+   * @returns {Array.<string>}
+   */
   getScenario() {
-    return this.scenario;
+    return this.currentScenarios;
   }
 
+  /**
+   * Работает ли модель по данному сценарию
+   * @param scenario {string}
+   * @returns {boolean}
+   */
   isScenario(scenario) {
-    return this.scenario === scenario;
+    return this.currentScenarios.indexOf(scenario) !== -1;
   }
 
   /**
@@ -166,13 +184,33 @@ export default class Model {
     this.validators = rules;
   }
 
+  /**
+   * Возвращает список доступных для редактирования полей
+   * либо undefined если нет ограничений
+   * @returns {Array<string>|undefined}
+   */
+  getEditableAttributes() {
+    let result = [];
+    const scenarios = this.scenarios();
+
+    this.currentScenarios.forEach(item => {
+      const attributes = scenarios[item];
+
+      if (attributes) {
+        result = [...result, ...attributes];
+      }
+    });
+
+    return result.length ? [...new Set(result)] : undefined;
+  }
+
   normalizeRules() {
     const rules = {};
 
-    const approvedAttributes = this.scenarios[this.scenario];
+    const editableAttributes = this.getEditableAttributes();
 
     Object.entries(this.rules()).forEach(([attribute, validator]) => {
-      if (approvedAttributes && approvedAttributes.indexOf(attribute) === -1) {
+      if (editableAttributes && editableAttributes.indexOf(attribute) === -1) {
         return;
       }
 
@@ -192,7 +230,7 @@ export default class Model {
     } else if (typeof validator === 'function') {
       return this.normalizeValidator(validator.call(this));
     } else if (validator instanceof Scenario) {
-      if (validator.apply === Scenario.APPLY_IN ? validator.scenarios.indexOf(this.scenario) !== -1 : validator.scenarios.indexOf(this.scenario) === -1) {
+      if (validator.apply === Scenario.APPLY_IN ? validator.scenarios.indexOf(this.currentScenarios) !== -1 : validator.scenarios.indexOf(this.currentScenarios) === -1) {
         return this.normalizeValidator(validator.validator);
       } else {
         return false; // skip
@@ -242,11 +280,11 @@ export default class Model {
    * @param values
    */
   setAttributes(values) {
-    const approvedAttributes = this.scenarios[this.scenario];
+    const editableAttributes = this.getEditableAttributes();
 
     this.attributes = this.attributes.withMutations((model) => {
       Object.entries(values).forEach(([attribute, value]) => {
-        if (approvedAttributes && approvedAttributes.indexOf(attribute) === -1) {
+        if (editableAttributes && editableAttributes.indexOf(attribute) === -1) {
           return;
         }
 
@@ -377,18 +415,24 @@ export default class Model {
     return this.get(attribute) !== this.getInitialAttribute(attribute);
   }
 
+  isAttributeEditable(attribute) {
+    const editableAttributes = this.getEditableAttributes();
+
+    return editableAttributes ? editableAttributes.indexOf(attribute) !== -1 : true;
+  }
+
   /**
    * Validate model
    * @param attributes{Array|string}
    * @returns {Promise.<boolean>}
    */
-  validate(attributes) {
+  validate(attributes = []) {
     const validators = this.getValidators();
 
-    let attrsToCheck = (typeof attributes === 'string' ? [attributes] : attributes) || [];
+    let attrsToCheck = typeof attributes === 'string' ? [attributes] : attributes;
 
     if (!attrsToCheck.length) {
-      attrsToCheck = this.scenarios[this.scenario] || Object.keys(validators);
+      attrsToCheck = this.scenarios[this.currentScenarios] || Object.keys(validators);
     }
 
     const jobs = [];
