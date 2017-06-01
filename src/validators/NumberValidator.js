@@ -118,10 +118,10 @@ export default class NumberValidator extends Validator {
     }
 
     if (this.equalTo && utils.isNumber(this.equalTo) && !(value === this.equalTo)) {
-      return this.createMessage(this.messageEqualTo || NumberValidator.MESSAGE_EQUAL_TO, {
+      return Promise.reject(this.createMessage(this.messageEqualTo || NumberValidator.MESSAGE_EQUAL_TO, {
         attribute,
         count: this.equalTo,
-      });
+      }));
     }
 
     if (this.lessThan && utils.isNumber(this.lessThan) && !(value < this.lessThan)) {
@@ -132,10 +132,10 @@ export default class NumberValidator extends Validator {
     }
 
     if (this.lessThanOrEqualTo && utils.isNumber(this.lessThanOrEqualTo) && !(value <= this.lessThan)) {
-      return this.createMessage(this.messageLessThanOrEqualTo || NumberValidator.MESSAGE_LESS_THAN_OR_EQUAL_TO, {
+      return Promise.reject(this.createMessage(this.messageLessThanOrEqualTo || NumberValidator.MESSAGE_LESS_THAN_OR_EQUAL_TO, {
         attribute,
         count: this.lessThanOrEqualTo,
-      });
+      }));
     }
 
     if (this.divisibleBy && utils.isNumber(this.divisibleBy) && !(value % this.divisibleBy === 0)) {
