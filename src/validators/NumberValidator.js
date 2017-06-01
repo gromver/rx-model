@@ -110,7 +110,7 @@ export default class NumberValidator extends Validator {
       }));
     }
 
-    if (this.greaterThanOrEqualTo && utils.isNumber(this.greaterThanOrEqualTo) && !(value >= this.greaterThan)) {
+    if (this.greaterThanOrEqualTo && utils.isNumber(this.greaterThanOrEqualTo) && !(value >= this.greaterThanOrEqualTo)) {
       return Promise.reject(this.createMessage(this.messageGreaterThanOrEqualTo || NumberValidator.MESSAGE_GREATER_THAN_OR_EQUAL_TO, {
         attribute,
         count: this.greaterThanOrEqualTo,
@@ -131,7 +131,7 @@ export default class NumberValidator extends Validator {
       }));
     }
 
-    if (this.lessThanOrEqualTo && utils.isNumber(this.lessThanOrEqualTo) && !(value <= this.lessThan)) {
+    if (this.lessThanOrEqualTo && utils.isNumber(this.lessThanOrEqualTo) && !(value <= this.lessThanOrEqualTo)) {
       return Promise.reject(this.createMessage(this.messageLessThanOrEqualTo || NumberValidator.MESSAGE_LESS_THAN_OR_EQUAL_TO, {
         attribute,
         count: this.lessThanOrEqualTo,
