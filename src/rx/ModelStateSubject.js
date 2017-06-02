@@ -10,14 +10,14 @@ export default class ModelStateSubject extends Subject {
   pendingFields = [];
   errorFields = [];
 
+  model;
   subscription;
-  form;
 
-  constructor(form) {
+  constructor(model) {
     super();
 
-    this.form = form;
-    this.subscription = form.observable.subscribe(this);
+    this.model = model;
+    this.subscription = model.observable.subscribe(this);
   }
 
   unsubscribe() {
@@ -33,41 +33,41 @@ export default class ModelStateSubject extends Subject {
 
     if (this.validFields.length) {
       if (this.validFields.find((attribute) => {
-        const state = this.form.getAttributeState(attribute);
+        const curState = this.model.getAttributeState(attribute);
 
-        return !((state instanceof SuccessState) || (state instanceof WarningState));
+        return !((curState instanceof SuccessState) || (curState instanceof WarningState));
       })) return;
     }
 
     if (this.successFields.length) {
       if (this.successFields.find((attribute) => {
-        const state = this.form.getAttributeState(attribute);
+        const curState = this.model.getAttributeState(attribute);
 
-        return !(state instanceof SuccessState);
+        return !(curState instanceof SuccessState);
       })) return;
     }
 
     if (this.warningFields.length) {
       if (this.warningFields.find((attribute) => {
-        const state = this.form.getAttributeState(attribute);
+        const curState = this.model.getAttributeState(attribute);
 
-        return !(state instanceof WarningState);
+        return !(curState instanceof WarningState);
       })) return;
     }
 
     if (this.pendingFields.length) {
       if (this.pendingFields.find((attribute) => {
-        const state = this.form.getAttributeState(attribute);
+        const curState = this.model.getAttributeState(attribute);
 
-        return !(state instanceof PendingState);
+        return !(curState instanceof PendingState);
       })) return;
     }
 
     if (this.errorFields.length) {
       if (this.errorFields.find((attribute) => {
-        const state = this.form.getAttributeState(attribute);
+        const curState = this.model.getAttributeState(attribute);
 
-        return !(state instanceof ErrorState);
+        return !(curState instanceof ErrorState);
       })) return;
     }
 
