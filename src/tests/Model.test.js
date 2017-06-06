@@ -77,11 +77,9 @@ describe('Test Model.js', () => {
 });
 
 describe('getFirstError life cycle', () => {
-  const model = new ValidatorsModel();
-
-  model.set('url', 'not valid');
-
   test('check url', async () => {
+    const model = new ValidatorsModel();
+    model.set('url', 'not valid');
     await model.validate('url').catch(() => Promise.resolve());
 
     const error = model.getFirstError();
@@ -91,6 +89,8 @@ describe('getFirstError life cycle', () => {
   });
 
   test('check order', async () => {
+    const model = new ValidatorsModel();
+    model.set('url', 'not valid');
     model.set('multi', 'not valid');
 
     await model.validate('multi').catch(() => Promise.resolve());
@@ -98,7 +98,7 @@ describe('getFirstError life cycle', () => {
     let error = model.getFirstError();
 
     expect(error).toBeInstanceOf(ErrorState);
-    expect(error.attribute).toBe('url');
+    expect(error.attribute).toBe('multi');
 
     await model.validate().catch(() => Promise.resolve());
 
@@ -197,5 +197,53 @@ describe('getFirstError life cycle', () => {
     expect(model.isAttributeEditable('multi')).toBe(true);
     expect(model.isAttributeEditable('notEditable')).toBe(false);
     expect(model.isAttributeEditable('multiWithUnsafe')).toBe(true);
+  });
+
+  test('Model and ValidationTracker', async () => {
+    const model = new ValidatorsModel();
+    const observer = jest.fn();
+
+    model.getObservable().subscribe(observer);
+
+    model.set('multi', 'http://foo.bar');
+    model.validate('multi');
+
+    await new Promise(resolve => {
+      setTimeout(resolve, 10);
+    });
+
+    model.set('multi', 'http://yandex.ru');
+
+    await new Promise(resolve => {
+      setTimeout(resolve, 500);
+    });
+
+    expect(observer.mock.calls[0][0]).toEqual(expect.any(PristineState));
+    expect(observer.mock.calls[1][0]).toEqual(expect.any(PendingState));
+    expect(observer.mock.calls[2][0]).toEqual(expect.any(PristineState));
+  });
+
+  test('Model and ValidationTracker #2', async () => {
+    const model = new ValidatorsModel();
+    const observer = jest.fn();
+
+    model.getObservable().subscribe(observer);
+
+    model.set('multi', 'http://foo.bar');
+    model.validate('multi');
+
+    await new Promise(resolve => {
+      setTimeout(resolve, 10);
+    });
+
+    model.set('multi', 'http://yandex.ru');
+
+    await model.validate('multi');
+
+    expect(observer.mock.calls[0][0]).toEqual(expect.any(PristineState));
+    expect(observer.mock.calls[1][0]).toEqual(expect.any(PendingState));
+    expect(observer.mock.calls[2][0]).toEqual(expect.any(PristineState));
+    expect(observer.mock.calls[3][0]).toEqual(expect.any(PendingState));
+    expect(observer.mock.calls[4][0]).toEqual(expect.any(SuccessState));
   });
 });

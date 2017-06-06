@@ -2,7 +2,16 @@ import { is } from 'immutable';
 import { PendingState, SuccessState, WarningState, ErrorState, PristineState } from './states';
 import utils from './utils';
 
-export default class StateTracker {
+/**
+ * Хелпер для валидации атрибутов модели, запускает процес валидации аттрибута модели,
+ * если валидатор асинхронный то устанавливается PendingState, после окончания валидации,
+ * устанавливается соответсующий стейт {ErrorState, SuccessState, WarningState}
+ * Если валидируется аттрибут который в данный момент все еще валидируется предыдущим вызовом -
+ * предыдущая валидация отменяется
+ * Если у атрибута его значение и результат валидации не менялись с последнего вызова -
+ * возвращается закешированный результат валидации
+ */
+export default class ValidationTracker {
   constructor(onPushState) {
     this.onPushState = onPushState;
   }
@@ -79,21 +88,8 @@ export default class StateTracker {
 
       return job;
     }
+
     return Promise.resolve(this.getAttributeState(attribute));
-  }
-
-  /**
-   * remove?
-   * @param attribute
-   */
-  changingAttribute(attribute) {
-    const state = new PristineState({
-      attribute,
-    });
-
-    this.setAttributeState(attribute, state);
-
-    this.pushState(state);
   }
 
   pushState(changes) {
@@ -105,8 +101,6 @@ export default class StateTracker {
   }
 
   getAttributeState(attribute) {
-    return this.state[attribute] || new PristineState({
-      attribute,
-    });
+    return this.state[attribute];
   }
 }

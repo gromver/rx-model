@@ -1,5 +1,5 @@
 import Model from './Model';
-import StateTracker from './StateTracker';
+import StateTracker from './ValidationTracker';
 import { SuccessState, WarningState } from './states';
 import utils from './utils';
 

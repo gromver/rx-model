@@ -1,9 +1,9 @@
 import Model from './Model';
-import StateTracker from './StateTracker';
+import ValidationTracker from './ValidationTracker';
 import Scenario from './Scenario';
 
 export {
   Model,
-  StateTracker,
+  ValidationTracker,
   Scenario
 };

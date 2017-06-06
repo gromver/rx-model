@@ -1,6 +1,6 @@
 import { Subject } from 'rxjs/Subject';
 import { Set } from 'immutable';
-import { SuccessState, WarningState, ErrorState, PendingState } from '../states';
+import { SuccessState, WarningState, ErrorState, PendingState, PristineState } from '../states';
 
 export default class ModelStateSubject extends Subject {
   changedFields = [];
@@ -8,6 +8,7 @@ export default class ModelStateSubject extends Subject {
   successFields = [];
   warningFields = [];
   pendingFields = [];
+  pristineFields = [];
   errorFields = [];
 
   model;
@@ -63,6 +64,14 @@ export default class ModelStateSubject extends Subject {
       })) return;
     }
 
+    if (this.pristineFields.length) {
+      if (this.pristineFields.find((attribute) => {
+          const curState = this.model.getAttributeState(attribute);
+
+          return !(curState instanceof PristineState);
+        })) return;
+    }
+
     if (this.errorFields.length) {
       if (this.errorFields.find((attribute) => {
         const curState = this.model.getAttributeState(attribute);
@@ -100,6 +109,12 @@ export default class ModelStateSubject extends Subject {
 
   whenPending(attributes) {
     this.pendingFields = new Set([...this.pendingFields, ...attributes]).toArray();
+
+    return this;
+  }
+
+  whenPristine(attributes) {
+    this.pristineFields = new Set([...this.pristineFields, ...attributes]).toArray();
 
     return this;
   }

@@ -1,7 +1,7 @@
 import { fromJS, Iterable, Map } from 'immutable';
 import { Subject } from 'rxjs/Subject';
 import { SuccessState, WarningState, ErrorState, PendingState, PristineState } from './states';
-import StateTracker from './StateTracker';
+import ValidationTracker from './ValidationTracker';
 import Scenario from './Scenario';
 import { Message, Validator, MultiValidator } from './validators';
 import ModelStateSubject from './rx/ModelStateSubject';
@@ -23,9 +23,15 @@ export default class Model {
   initialAttributes;
 
   /**
-   * @type {StateTracker}
+   * @type {ValidationTracker}
    */
-  stateTracker;
+  validationTracker;
+
+  /**
+   * Validation state
+   * @type {{}}
+   */
+  state;
 
   /**
    * Validation state's stream
@@ -53,6 +59,8 @@ export default class Model {
     this.attributes = map;
     this.initialAttributes = map;
 
+    this.validationTracker = new ValidationTracker(this.onStateChange);
+
     this.setScenario(scenario);
 
     this.prepareModel();
@@ -75,7 +83,19 @@ export default class Model {
   }
 
   onStateChange(state) {
+    this.setState(state);
+
     this.observable.next(state);
+  }
+
+  setState(state) {
+    const curState = this.state[state.attribute];
+
+    if (curState instanceof PendingState) {
+      curState.abort();
+    }
+
+    this.state[state.attribute] = state;
   }
 
   /**
@@ -142,8 +162,6 @@ export default class Model {
    */
   setScenario(scenario) {
     this.currentScenarios = typeof scenario === 'string' ? [scenario] : scenario;
-
-    this.stateTracker = new StateTracker(this.onStateChange);
 
     this.invalidateValidators();
   }
@@ -253,6 +271,8 @@ export default class Model {
   }
 
   invalidateValidators() {
+    this.state = {};
+
     this.validators = undefined;
   }
 
@@ -264,6 +284,8 @@ export default class Model {
    */
   set(attribute, value) {
     this.attributes = this.attributes.setIn(utils.resolveAttribute(attribute), value);
+
+    this.markAsPristine([attribute]);
   }
 
   /**
@@ -295,8 +317,10 @@ export default class Model {
 
         model.setIn(utils.resolveAttribute(attribute), value);
 
-        this.stateTracker.changingAttribute(attribute);
+        this.markAsPristine([attribute]);
       });
+
+      // this.markAsPristine(Object.keys(values));
     });
   }
 
@@ -312,10 +336,6 @@ export default class Model {
    * State getters/setters
    */
 
-  getAttributeState(attribute) {
-    return this.stateTracker.getAttributeState(attribute);
-  }
-
   getInitialAttribute(attribute) {
     const { initialAttributes: model } = this;
 
@@ -329,14 +349,31 @@ export default class Model {
    */
 
   /**
+   *
+   * @param attribute
+   * @returns {PendingState|WarningState|SuccessState|ErrorState|PristineState}
+   */
+  getAttributeState(attribute) {
+    let state = this.state[attribute];
+
+    if (!state) {
+      state = new PristineState({
+        attribute,
+      });
+
+      this.setState(state);
+    }
+
+    return state;
+  }
+
+  /**
    * Returns current attribute state object or null
    * @param {string} attribute
-   * @returns {PendingState|WarningState|SuccessState|ErrorState|null}
+   * @returns {string}
    */
   getValidationState(attribute) {
-    const state = this.stateTracker.getAttributeState(attribute);
-
-    return state && state.state || null;
+    return this.getAttributeState(attribute).state;
   }
 
   /**
@@ -349,7 +386,7 @@ export default class Model {
    * @returns {Message|string|null}
    */
   getValidationError(attribute) {
-    const state = this.stateTracker.getAttributeState(attribute);
+    const state = this.getAttributeState(attribute);
 
     return state && (state instanceof ErrorState) && state.message || null;
   }
@@ -359,17 +396,16 @@ export default class Model {
    * @returns {Array<ErrorState>}
    */
   getValidationErrors() {
-    return Object.values(this.stateTracker.state).filter(state => state instanceof ErrorState);
+    return Object.values(this.state).filter(state => state instanceof ErrorState);
   }
 
-    // сообщение вне зависимости от типа состояния
   /**
    * Get attributes's any validation message
    * @param {string} attribute
    * @returns {Message|string|null}
    */
   getValidationMessage(attribute) {
-    const state = this.stateTracker.getAttributeState(attribute);
+    const state = this.getAttributeState(attribute);
 
     return state && state.message || null;
   }
@@ -380,7 +416,7 @@ export default class Model {
    * @returns {Message|string|null}
    */
   getValidationWarning(attribute) {
-    const state = this.stateTracker.getAttributeState(attribute);
+    const state = this.getAttributeState(attribute);
 
     return state && (state instanceof WarningState) && state.message || null;
   }
@@ -390,15 +426,15 @@ export default class Model {
    * @returns {ErrorState|undefined}
    */
   getFirstError() {
-    const errors = Object.values(this.stateTracker.state).filter(state => state instanceof ErrorState).map(state => state.attribute);
+    const errors = Object.values(this.state).filter(state => state instanceof ErrorState).map(state => state.attribute);
     const rules = Object.keys(this.getValidators());
     const firstErrorAttribute = rules.find(attribute => errors.indexOf(attribute) !== -1);
 
-    return firstErrorAttribute ? this.stateTracker.getAttributeState(firstErrorAttribute) : undefined;
+    return firstErrorAttribute ? this.getAttributeState(firstErrorAttribute) : undefined;
   }
 
   hasErrors() {
-    return !!Object.values(this.stateTracker.state).find(state => state instanceof ErrorState);
+    return !!Object.values(this.state).find(state => state instanceof ErrorState);
   }
 
   /**
@@ -443,7 +479,7 @@ export default class Model {
     let attrsToCheck = typeof attributes === 'string' ? [attributes] : attributes;
 
     if (!attrsToCheck.length) {
-      attrsToCheck = this.scenarios[this.currentScenarios] || Object.keys(validators);
+      attrsToCheck = Object.keys(validators);
     }
 
     const jobs = [];
@@ -452,7 +488,7 @@ export default class Model {
       const validator = validators[attribute];
 
       if (validator) {
-        jobs.push(this.stateTracker.validateAttribute(this.attributes, attribute, validator));
+        jobs.push(this.validationTracker.validateAttribute(this.attributes, attribute, validator));
       }
     });
 
@@ -479,9 +515,7 @@ export default class Model {
         attribute
       });
       
-      this.stateTracker.setAttributeState(attribute, state);
-      
-      this.stateTracker.pushState(state);
+      this.onStateChange(state);
     })
   }
 
@@ -495,9 +529,7 @@ export default class Model {
         attribute
       });
 
-      this.stateTracker.setAttributeState(attribute, state);
-
-      this.stateTracker.pushState(state);
+      this.onStateChange(state);
     })
   }
 
@@ -511,9 +543,7 @@ export default class Model {
         attribute
       });
 
-      this.stateTracker.setAttributeState(attribute, state);
-
-      this.stateTracker.pushState(state);
+      this.onStateChange(state);
     })
   }
 
@@ -527,9 +557,7 @@ export default class Model {
         attribute
       });
 
-      this.stateTracker.setAttributeState(attribute, state);
-
-      this.stateTracker.pushState(state);
+      this.onStateChange(state);
     })
   }
 
@@ -543,9 +571,7 @@ export default class Model {
         attribute
       });
 
-      this.stateTracker.setAttributeState(attribute, state);
-
-      this.stateTracker.pushState(state);
+      this.onStateChange(state);
     })
   }
 
@@ -571,6 +597,10 @@ export default class Model {
 
   whenPending(attributes, fn) {
     return this.getObservable().when(attributes).whenPending(attributes).subscribe(fn.bind(this));
+  }
+
+  whenPristine(attributes, fn) {
+    return this.getObservable().when(attributes).whenPristine(attributes).subscribe(fn.bind(this));
   }
 
   whenError(attributes, fn) {

@@ -3,7 +3,13 @@
  */
 
 export default class State {
+  /**
+   * @type {string}
+   */
   attribute;
+  /**
+   * @type {Message|string}
+   */
   message;
 
   constructor({ attribute, message }) {
