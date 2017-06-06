@@ -89,7 +89,11 @@ export default class ValidationTracker {
       return job;
     }
 
-    return Promise.resolve(this.getAttributeState(attribute));
+    const cachedState = this.getAttributeState(attribute);
+
+    this.pushState(cachedState);
+
+    return Promise.resolve(cachedState);
   }
 
   pushState(changes) {
