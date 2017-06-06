@@ -1,6 +1,7 @@
 import Message from './Message';
 
 import Validator from './Validator';
+import UnsafeValidator from './UnsafeValidator';
 import PresenceValidator from './PresenceValidator';
 import MultiValidator from './MultiValidator';
 import CustomValidator from './CustomValidator';
@@ -13,16 +14,17 @@ import DateValidator from './DateValidator';
 import UrlValidator from './UrlValidator';
 
 export {
-    Message,
-    Validator,
-    PresenceValidator,
-    MultiValidator,
-    CustomValidator,
-    EmailValidator,
-    NumberValidator,
-    StringValidator,
-    RangeValidator,
-    CompareValidator,
-    DateValidator,
-    UrlValidator,
+  Message,
+  Validator,
+  UnsafeValidator,
+  PresenceValidator,
+  MultiValidator,
+  CustomValidator,
+  EmailValidator,
+  NumberValidator,
+  StringValidator,
+  RangeValidator,
+  CompareValidator,
+  DateValidator,
+  UrlValidator,
 };

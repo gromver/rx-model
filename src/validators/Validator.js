@@ -10,6 +10,10 @@ export default class Validator {
     return Promise.resolve();
   }
 
+  isSafe() {
+    return true;
+  }
+
   static is(a, b) {
     if (a === b) return true;
 

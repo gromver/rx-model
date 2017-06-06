@@ -20,5 +20,15 @@ export default class MultiValidator extends Validator {
       ? promiseAny(jobs).then(messages => messages.find(i => i) || null)
       : Promise.all(jobs).then(messages => messages.find(i => i) || null);
   }
+
+  isSafe() {
+    if (this.validators.length) {
+      const safeValidators = this.validators.filter(v => v.isSafe());
+
+      return !!safeValidators.length;
+    }
+
+    return false;
+  }
 }
 

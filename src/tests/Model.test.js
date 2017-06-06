@@ -127,15 +127,15 @@ describe('getFirstError life cycle', () => {
 
     model.setScenario(ValidatorsModel.SCENARIO_A);
 
-    expect(model.getEditableAttributes()).toEqual(['presence']);
+    expect(model.getValidatableAttributes()).toEqual(['presence', 'multiWithUnsafe']);
 
     model.setScenario([ValidatorsModel.SCENARIO_A]);
 
-    expect(model.getEditableAttributes()).toEqual(['presence']);
+    expect(model.getValidatableAttributes()).toEqual(['presence', 'multiWithUnsafe']);
 
     model.setScenario([ValidatorsModel.SCENARIO_A, ValidatorsModel.SCENARIO_B]);
 
-    expect(model.getEditableAttributes()).toEqual(['presence', 'multi']);
+    expect(model.getValidatableAttributes()).toEqual(['presence', 'multiWithUnsafe', 'multi', 'notEditable']);
   });
 
   test('isScenario()', () => {
@@ -178,15 +178,24 @@ describe('getFirstError life cycle', () => {
     expect(model.isAttributeEditable('presence')).toBe(true);
     expect(model.isAttributeEditable('url')).toBe(true);
     expect(model.isAttributeEditable('multi')).toBe(true);
+    expect(model.isAttributeEditable('notEditable')).toBe(false);
+    expect(model.isAttributeEditable('multiWithUnsafe')).toBe(true);
 
     model.setScenario(ValidatorsModel.SCENARIO_A);
     expect(model.isAttributeEditable('presence')).toBe(true);
     expect(model.isAttributeEditable('url')).toBe(false);
     expect(model.isAttributeEditable('multi')).toBe(false);
+    expect(model.isAttributeEditable('notEditable')).toBe(false);
+    expect(model.isAttributeEditable('multiWithUnsafe')).toBe(false);
+
+    model.setScenario(ValidatorsModel.SCENARIO_B);
+    expect(model.isAttributeEditable('multiWithUnsafe')).toBe(true);
 
     model.setScenario([ValidatorsModel.SCENARIO_A, ValidatorsModel.SCENARIO_B]);
     expect(model.isAttributeEditable('presence')).toBe(true);
     expect(model.isAttributeEditable('url')).toBe(false);
     expect(model.isAttributeEditable('multi')).toBe(true);
+    expect(model.isAttributeEditable('notEditable')).toBe(false);
+    expect(model.isAttributeEditable('multiWithUnsafe')).toBe(true);
   });
 });

@@ -138,7 +138,7 @@ export default class Model {
   /**
    * Установка сценария
    * Сценариев может быть несколько
-   * @param scenario <Array<string>|string>
+   * @param {Array<string>|string} scenario
    */
   setScenario(scenario) {
     this.currentScenarios = typeof scenario === 'string' ? [scenario] : scenario;
@@ -149,7 +149,7 @@ export default class Model {
   }
 
   /**
-   * @returns {Array.<string>}
+   * @returns {Array<string>}
    */
   getScenario() {
     return this.currentScenarios;
@@ -157,7 +157,7 @@ export default class Model {
 
   /**
    * Работает ли модель по данному сценарию
-   * @param scenario {string}
+   * @param {string} scenario
    * @returns {boolean}
    */
   isScenario(scenario) {
@@ -185,11 +185,11 @@ export default class Model {
   }
 
   /**
-   * Возвращает список доступных для редактирования полей
+   * Возвращает список доступных для валидирования полей
    * либо undefined если нет ограничений
    * @returns {Array<string>|undefined}
    */
-  getEditableAttributes() {
+  getValidatableAttributes() {
     let result = [];
     const scenarios = this.scenarios();
 
@@ -207,10 +207,10 @@ export default class Model {
   normalizeRules() {
     const rules = {};
 
-    const editableAttributes = this.getEditableAttributes();
+    const validatableAttributes = this.getValidatableAttributes();
 
     Object.entries(this.rules()).forEach(([attribute, validator]) => {
-      if (editableAttributes && editableAttributes.indexOf(attribute) === -1) {
+      if (validatableAttributes && validatableAttributes.indexOf(attribute) === -1) {
         return;
       }
 
@@ -224,13 +224,18 @@ export default class Model {
     return rules;
   }
 
+  isIntersectedScenarios(a, b) {
+    return a.find(i => b.indexOf(i) !== -1);
+  }
+
   normalizeValidator(validator) {
     if (validator instanceof Validator) {
       return validator;
     } else if (typeof validator === 'function') {
       return this.normalizeValidator(validator.call(this));
     } else if (validator instanceof Scenario) {
-      if (validator.apply === Scenario.APPLY_IN ? validator.scenarios.indexOf(this.currentScenarios) !== -1 : validator.scenarios.indexOf(this.currentScenarios) === -1) {
+      if ((validator.apply === Scenario.APPLY_IN && this.isIntersectedScenarios(validator.scenarios, this.currentScenarios))
+        || (validator.apply === Scenario.APPLY_EXCEPT && !this.isIntersectedScenarios(validator.scenarios, this.currentScenarios))) {
         return this.normalizeValidator(validator.validator);
       } else {
         return false; // skip
@@ -264,7 +269,7 @@ export default class Model {
   /**
    * Get attribute value
    * attribute name can be deep: this.get('foo.bar', value)
-   * @param attribute
+   * @param {string} attribute
    * @returns {*}
    */
   get(attribute) {
@@ -277,14 +282,14 @@ export default class Model {
 
   /**
    * Set attributes
-   * @param values
+   * @param {Object} values
    */
   setAttributes(values) {
-    const editableAttributes = this.getEditableAttributes();
+    const validatableAttributes = this.getValidatableAttributes();
 
     this.attributes = this.attributes.withMutations((model) => {
       Object.entries(values).forEach(([attribute, value]) => {
-        if (editableAttributes && editableAttributes.indexOf(attribute) === -1) {
+        if (validatableAttributes && validatableAttributes.indexOf(attribute) === -1) {
           return;
         }
 
@@ -325,7 +330,7 @@ export default class Model {
 
   /**
    * Returns current attribute state object or null
-   * @param attribute
+   * @param {string} attribute
    * @returns {PendingState|WarningState|SuccessState|ErrorState|null}
    */
   getValidationState(attribute) {
@@ -351,7 +356,7 @@ export default class Model {
 
   /**
    *
-   * @returns {Array.<SuccessState|WarningState|ErrorState|PendingState>}
+   * @returns {Array<ErrorState>}
    */
   getValidationErrors() {
     return Object.values(this.stateTracker.state).filter(state => state instanceof ErrorState);
@@ -360,7 +365,7 @@ export default class Model {
     // сообщение вне зависимости от типа состояния
   /**
    * Get attributes's any validation message
-   * @param attribute
+   * @param {string} attribute
    * @returns {Message|string|null}
    */
   getValidationMessage(attribute) {
@@ -371,7 +376,7 @@ export default class Model {
 
   /**
    * Get attributes's warning validation message
-   * @param attribute
+   * @param {string} attribute
    * @returns {Message|string|null}
    */
   getValidationWarning(attribute) {
@@ -398,7 +403,7 @@ export default class Model {
 
   /**
    * Is model valid
-   * TODO: учитывать наличие состояния для всех аттрибутов у которых есть валидаторы
+   * TODO?: учитывать наличие состояния для всех аттрибутов у которых есть валидаторы
    * @returns {boolean}
    */
   isModelValid() {
@@ -416,15 +421,21 @@ export default class Model {
   }
 
   isAttributeEditable(attribute) {
-    const editableAttributes = this.getEditableAttributes();
+    const validators = this.getValidators();
 
-    return editableAttributes ? editableAttributes.indexOf(attribute) !== -1 : true;
+    const validator = validators[attribute];
+
+    if (validator) {
+      return validator.isSafe();
+    }
+
+    return false;
   }
 
   /**
    * Validate model
-   * @param attributes{Array|string}
-   * @returns {Promise.<boolean>}
+   * @param {Array<string>|string} attributes
+   * @returns {Promise<boolean>}
    */
   validate(attributes = []) {
     const validators = this.getValidators();
@@ -460,7 +471,7 @@ export default class Model {
 
   /**
    * Change the attributes states to PristineState
-   * @param attributes{Array<string>}
+   * @param {Array<string>} attributes
    */
   markAsPristine(attributes) {
     attributes.forEach(attribute => {
@@ -476,7 +487,7 @@ export default class Model {
 
   /**
    * Change the attributes states to PendingState
-   * @param attributes{Array<string>}
+   * @param {Array<string>} attributes
    */
   markAsPending(attributes) {
     attributes.forEach(attribute => {
@@ -492,7 +503,7 @@ export default class Model {
 
   /**
    * Change the attributes states to SuccessState
-   * @param attributes{Array<string>}
+   * @param {Array<string>} attributes
    */
   markAsSuccess(attributes) {
     attributes.forEach(attribute => {
@@ -508,7 +519,7 @@ export default class Model {
 
   /**
    * Change the attributes states to WarningState
-   * @param attributes{Array<string>}
+   * @param {Array<string>} attributes
    */
   markAsWarning(attributes) {
     attributes.forEach(attribute => {
@@ -524,7 +535,7 @@ export default class Model {
 
   /**
    * Change the attributes states to ErrorState
-   * @param attributes{Array<string>}
+   * @param {Array<string>} attributes
    */
   markAsError(attributes) {
     attributes.forEach(attribute => {

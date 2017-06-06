@@ -1,5 +1,5 @@
-import { Model } from '../..';
-import { PresenceValidator, UrlValidator, CustomValidator } from '../../validators';
+import { Model, Scenario } from '../..';
+import { PresenceValidator, UrlValidator, CustomValidator, UnsafeValidator, Validator } from '../../validators';
 
 export default class ValidatorsModel extends Model {
   static SCENARIO_A = 'a';
@@ -14,8 +14,8 @@ export default class ValidatorsModel extends Model {
 
   scenarios() {
     return {
-      [ValidatorsModel.SCENARIO_A]: ['presence'],
-      [ValidatorsModel.SCENARIO_B]: ['multi', 'presence']
+      [ValidatorsModel.SCENARIO_A]: ['presence', 'multiWithUnsafe'],
+      [ValidatorsModel.SCENARIO_B]: ['multi', 'presence', 'notEditable', 'multiWithUnsafe']
     }
   }
 
@@ -38,6 +38,11 @@ export default class ValidatorsModel extends Model {
           }),
         }),
       ],
+      notEditable: false,
+      multiWithUnsafe: [
+        Scenario.in([ValidatorsModel.SCENARIO_A], new UnsafeValidator()),
+        Scenario.in([ValidatorsModel.SCENARIO_B, ValidatorsModel.SCENARIO_DEFAULT], new Validator()),
+      ]
     };
   }
 }
