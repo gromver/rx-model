@@ -143,6 +143,8 @@ export default class Model {
   setScenario(scenario) {
     this.currentScenarios = typeof scenario === 'string' ? [scenario] : scenario;
 
+    this.stateTracker = new StateTracker(this.onStateChange);
+
     this.invalidateValidators();
   }
 
@@ -252,8 +254,6 @@ export default class Model {
 
   invalidateValidators() {
     this.validators = undefined;
-
-    this.stateTracker = new StateTracker(this.onStateChange);
   }
 
   /**
