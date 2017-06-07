@@ -97,7 +97,7 @@ export default class NumberValidator extends Validator {
 
     // Same logic as above, sort of. Don't bother with comparisons if this
     // doesn't pass.
-    if (this.onlyInteger !== undefined && !utils.isInteger(value)) {
+    if (this.onlyInteger && !utils.isInteger(value)) {
       return Promise.reject(this.createMessage(this.messageOnlyInteger || NumberValidator.MESSAGE_ONLY_INTEGER, {
         attribute,
       }));
