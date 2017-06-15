@@ -1,4 +1,4 @@
-import { SuccessState, PendingState, WarningState, ErrorState, PristineState } from '../states';
+import { SuccessState, PendingState, WarningState, ErrorState, PristineState, MutationState } from '../states';
 import { MultiValidator, PresenceValidator, UrlValidator, CustomValidator } from '../validators';
 import { Map } from 'immutable';
 import ValidatorsModel from './models/ValidatorsModel';
@@ -58,20 +58,6 @@ describe('Test Model.js', () => {
       presence: 'bar',
       url: 'http://yandex.ru',
       multi: 'http://google.com',
-    });
-  });
-
-  test('validate', () => {
-    const subscriber = jest.fn(/*state => console.log('ST', state)*/);
-
-    const subscription = model.subscribe(subscriber);
-
-    return model.validate(['presence', 'url', 'multi']).catch(() => {
-      expect(subscriber.mock.calls[0][0]).toEqual(expect.any(SuccessState));
-      expect(subscriber.mock.calls[1][0]).toEqual(expect.any(PendingState));
-      expect(subscriber.mock.calls[2][0]).toEqual(expect.any(ErrorState));
-
-      subscription.unsubscribe();
     });
   });
 });
@@ -203,7 +189,7 @@ describe('getFirstError life cycle', () => {
     const model = new ValidatorsModel();
     const observer = jest.fn();
 
-    model.getObservable().subscribe(observer);
+    model.getValidationObservable().subscribe(observer);
 
     model.set('multi', 'http://foo.bar');
     model.validate('multi');
@@ -218,16 +204,15 @@ describe('getFirstError life cycle', () => {
       setTimeout(resolve, 500);
     });
 
-    expect(observer.mock.calls[0][0]).toEqual(expect.any(PristineState));
-    expect(observer.mock.calls[1][0]).toEqual(expect.any(PendingState));
-    expect(observer.mock.calls[2][0]).toEqual(expect.any(PristineState));
+    expect(observer.mock.calls[0][0]).toEqual(expect.any(PendingState));
+    expect(observer.mock.calls[1][0]).toEqual(expect.any(ErrorState));
   });
 
   test('Model and ValidationTracker #2', async () => {
     const model = new ValidatorsModel();
     const observer = jest.fn();
 
-    model.getObservable().subscribe(observer);
+    model.getValidationObservable().subscribe(observer);
 
     model.set('multi', 'http://foo.bar');
     model.validate('multi');
@@ -240,10 +225,43 @@ describe('getFirstError life cycle', () => {
 
     await model.validate('multi');
 
-    expect(observer.mock.calls[0][0]).toEqual(expect.any(PristineState));
+    expect(observer).toHaveBeenCalledTimes(3);
+    expect(observer.mock.calls[0][0]).toEqual(expect.any(PendingState));
     expect(observer.mock.calls[1][0]).toEqual(expect.any(PendingState));
-    expect(observer.mock.calls[2][0]).toEqual(expect.any(PristineState));
-    expect(observer.mock.calls[3][0]).toEqual(expect.any(PendingState));
-    expect(observer.mock.calls[4][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[2][0]).toEqual(expect.any(SuccessState));
+  });
+
+  test('Mutation observable test', async () => {
+    const model = new ValidatorsModel();
+    const observer = jest.fn();
+
+    const observable = model.getMutationObservable();
+
+    observable.subscribe(observer);
+
+    model.set('presence', '1');
+    model.set('presence', '2');
+    model.set('presence', '3');
+    model.set('url', '');
+
+    expect(observer).toHaveBeenCalledTimes(4);
+    expect(observer.mock.calls[0][0]).toEqual(expect.any(MutationState));
+    expect(observer.mock.calls[1][0]).toEqual(expect.any(MutationState));
+    expect(observer.mock.calls[2][0]).toEqual(expect.any(MutationState));
+    expect(observer.mock.calls[3][0]).toEqual(expect.any(MutationState));
+
+    observer.mockClear();
+    observable.when(['presence']);
+    model.set('presence', '1');
+    model.set('presence', '2');
+    model.set('url', '');
+    expect(observer).toHaveBeenCalledTimes(2);
+
+    observer.mockClear();
+    observable.when(['url']);
+    model.set('presence', '1');
+    model.set('presence', '2');
+    model.set('url', '');
+    expect(observer).toHaveBeenCalledTimes(3);
   });
 });

@@ -2,7 +2,7 @@ import { Subject } from 'rxjs/Subject';
 import { Set } from 'immutable';
 import { SuccessState, WarningState, ErrorState, PendingState, PristineState } from '../states';
 
-export default class ModelStateSubject extends Subject {
+export default class ValidationStateSubject extends Subject {
   changedFields = [];
   validFields = [];
   successFields = [];
@@ -18,7 +18,7 @@ export default class ModelStateSubject extends Subject {
     super();
 
     this.model = model;
-    this.subscription = model.observable.subscribe(this);
+    this.subscription = model.validationObservable.subscribe(this);
   }
 
   unsubscribe() {
@@ -27,6 +27,10 @@ export default class ModelStateSubject extends Subject {
     this.subscription.unsubscribe();
   }
 
+  /**
+   * Extended
+   * @param {SuccessState|WarningState|ErrorState|PendingState} state
+   */
   next(state) {
     if (this.changedFields.length) {
       if (this.changedFields.indexOf(state.attribute) === -1) return;

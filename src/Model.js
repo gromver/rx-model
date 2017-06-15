@@ -1,10 +1,11 @@
 import { fromJS, Iterable, Map } from 'immutable';
 import { Subject } from 'rxjs/Subject';
-import { SuccessState, WarningState, ErrorState, PendingState, PristineState } from './states';
+import { SuccessState, WarningState, ErrorState, PendingState, PristineState, MutationState } from './states';
 import ValidationTracker from './ValidationTracker';
 import Scenario from './Scenario';
 import { Message, Validator, MultiValidator } from './validators';
-import ModelStateSubject from './rx/ModelStateSubject';
+import ValidationStateSubject from './rx/ValidationStateSubject';
+import MutationStateSubject from './rx/MutationStateSubject';
 import utils from './utils';
 
 export default class Model {
@@ -37,7 +38,13 @@ export default class Model {
    * Validation state's stream
    * @type {Subject}
    */
-  observable = new Subject();
+  validationObservable = new Subject();
+
+  /**
+   * Attribute's mutation stream
+   * @type {Subject}
+   */
+  mutationObservable = new Subject();
 
   /**
    * Список валидаторов
@@ -54,12 +61,12 @@ export default class Model {
   constructor(data = {}, scenario = Model.SCENARIO_DEFAULT) {
     const map = fromJS(this.prepareSourceData(data));
 
-    this.onStateChange = this.onStateChange.bind(this);
+    this.onValidationStateChange = this.onValidationStateChange.bind(this);
 
     this.attributes = map;
     this.initialAttributes = map;
 
-    this.validationTracker = new ValidationTracker(this.onStateChange);
+    this.validationTracker = new ValidationTracker(this.onValidationStateChange);
 
     this.setScenario(scenario);
 
@@ -71,21 +78,25 @@ export default class Model {
    */
 
   /**
-   * Form state stream
-   * @returns {ModelStateSubject}
+   * Model's validation state stream
+   * @returns {ValidationStateSubject}
    */
-  getObservable() {
-    return new ModelStateSubject(this);
+  getValidationObservable() {
+    return new ValidationStateSubject(this);
   }
 
-  subscribe(cb) {
-    return this.observable.subscribe(cb);
+  /**
+   * Model's mutation state stream
+   * @returns {MutationStateSubject}
+   */
+  getMutationObservable() {
+    return new MutationStateSubject(this);
   }
 
-  onStateChange(state) {
+  onValidationStateChange(state) {
     this.setState(state);
 
-    this.observable.next(state);
+    this.validationObservable.next(state);
   }
 
   setState(state) {
@@ -285,7 +296,10 @@ export default class Model {
   set(attribute, value) {
     this.attributes = this.attributes.setIn(utils.resolveAttribute(attribute), value);
 
-    this.markAsPristine([attribute]);
+    this.mutationObservable.next(new MutationState({
+      attribute,
+      value
+    }));
   }
 
   /**
@@ -317,10 +331,11 @@ export default class Model {
 
         model.setIn(utils.resolveAttribute(attribute), value);
 
-        this.markAsPristine([attribute]);
+        this.mutationObservable.next(new MutationState({
+          attribute,
+          value
+        }));
       });
-
-      // this.markAsPristine(Object.keys(values));
     });
   }
 
@@ -515,7 +530,7 @@ export default class Model {
         attribute
       });
       
-      this.onStateChange(state);
+      this.onValidationStateChange(state);
     })
   }
 
@@ -529,7 +544,7 @@ export default class Model {
         attribute
       });
 
-      this.onStateChange(state);
+      this.onValidationStateChange(state);
     })
   }
 
@@ -543,7 +558,7 @@ export default class Model {
         attribute
       });
 
-      this.onStateChange(state);
+      this.onValidationStateChange(state);
     })
   }
 
@@ -557,7 +572,7 @@ export default class Model {
         attribute
       });
 
-      this.onStateChange(state);
+      this.onValidationStateChange(state);
     })
   }
 
@@ -571,7 +586,7 @@ export default class Model {
         attribute
       });
 
-      this.onStateChange(state);
+      this.onValidationStateChange(state);
     })
   }
 
@@ -580,30 +595,30 @@ export default class Model {
    */
 
   when(attributes, fn) {
-    return this.getObservable().when(attributes).subscribe(fn.bind(this));
+    return this.getValidationObservable().when(attributes).subscribe(fn.bind(this));
   }
 
   whenValid(attributes, fn) {
-    return this.getObservable().when(attributes).whenValid(attributes).subscribe(fn.bind(this));
+    return this.getValidationObservable().when(attributes).whenValid(attributes).subscribe(fn.bind(this));
   }
 
   whenSuccess(attributes, fn) {
-    return this.getObservable().when(attributes).whenSuccess(attributes).subscribe(fn.bind(this));
+    return this.getValidationObservable().when(attributes).whenSuccess(attributes).subscribe(fn.bind(this));
   }
 
   whenWarning(attributes, fn) {
-    return this.getObservable().when(attributes).whenWarning(attributes).subscribe(fn.bind(this));
+    return this.getValidationObservable().when(attributes).whenWarning(attributes).subscribe(fn.bind(this));
   }
 
   whenPending(attributes, fn) {
-    return this.getObservable().when(attributes).whenPending(attributes).subscribe(fn.bind(this));
+    return this.getValidationObservable().when(attributes).whenPending(attributes).subscribe(fn.bind(this));
   }
 
   whenPristine(attributes, fn) {
-    return this.getObservable().when(attributes).whenPristine(attributes).subscribe(fn.bind(this));
+    return this.getValidationObservable().when(attributes).whenPristine(attributes).subscribe(fn.bind(this));
   }
 
   whenError(attributes, fn) {
-    return this.getObservable().when(attributes).whenError(attributes).subscribe(fn.bind(this));
+    return this.getValidationObservable().when(attributes).whenError(attributes).subscribe(fn.bind(this));
   }
 };
