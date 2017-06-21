@@ -69,8 +69,6 @@ export default class Model {
     this.validationTracker = new ValidationTracker(this.onValidationStateChange);
 
     this.setScenario(scenario);
-
-    this.prepareModel();
   }
 
   /**
@@ -155,12 +153,6 @@ export default class Model {
   prepareResultData(data) {
     return data;
   }
-
-  /**
-   * EXTEND THIS
-   * подготовка модели (подписка обработчиков на when... события)
-   */
-  prepareModel() { }
 
   /**
    * scenarios
@@ -588,37 +580,5 @@ export default class Model {
 
       this.onValidationStateChange(state);
     })
-  }
-
-  /**
-   * when... shortcuts
-   */
-
-  when(attributes, fn) {
-    return this.getValidationObservable().when(attributes).subscribe(fn.bind(this));
-  }
-
-  whenValid(attributes, fn) {
-    return this.getValidationObservable().when(attributes).whenValid(attributes).subscribe(fn.bind(this));
-  }
-
-  whenSuccess(attributes, fn) {
-    return this.getValidationObservable().when(attributes).whenSuccess(attributes).subscribe(fn.bind(this));
-  }
-
-  whenWarning(attributes, fn) {
-    return this.getValidationObservable().when(attributes).whenWarning(attributes).subscribe(fn.bind(this));
-  }
-
-  whenPending(attributes, fn) {
-    return this.getValidationObservable().when(attributes).whenPending(attributes).subscribe(fn.bind(this));
-  }
-
-  whenPristine(attributes, fn) {
-    return this.getValidationObservable().when(attributes).whenPristine(attributes).subscribe(fn.bind(this));
-  }
-
-  whenError(attributes, fn) {
-    return this.getValidationObservable().when(attributes).whenError(attributes).subscribe(fn.bind(this));
   }
 };
