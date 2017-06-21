@@ -16,7 +16,7 @@ export default class CompareValidator extends Validator {
       throw new Error('either compareAttribute or compareValue prop must be set.');
     }
 
-        // todo add operator support ('==', '===', '!==', '!=', '<=', '>=')
+    // todo add operator support ('==', '===', '!==', '!=', '<=', '>=')
     this.message = message;
     this.compareAttribute = compareAttribute;
     this.compareValue = compareValue;
@@ -24,7 +24,7 @@ export default class CompareValidator extends Validator {
   }
 
   validate(value, attribute, model) {
-        // Empty values are fine
+    // Undefined values are fine
     if (!utils.isDefined(value)) {
       return Promise.resolve();
     }

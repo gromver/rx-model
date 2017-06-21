@@ -31,7 +31,7 @@ export default class DateValidator extends Validator {
   }
 
   validate(value, attribute) {
-        // Empty values are fine
+    // Undefined values are fine
     if (!utils.isDefined(value)) {
       return Promise.resolve();
     }

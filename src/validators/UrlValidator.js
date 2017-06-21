@@ -17,8 +17,8 @@ export default class UrlValidator extends Validator {
   }
 
   validate(value, attribute) {
-        // Empty values are fine
-    if (!utils.isDefined(value)) {
+    // Empty values are fine
+    if (!utils.isDefined(value) || utils.isEmpty(value)) {
       return Promise.resolve();
     }
 
@@ -28,14 +28,14 @@ export default class UrlValidator extends Validator {
       }));
     }
 
-        // https://gist.github.com/dperini/729294
+    // https://gist.github.com/dperini/729294
     let regex =
-            `${'^' +
-            // protocol identifier
-            '(?:(?:'}${this.schemes.join('|')})://)` +
-            // user:pass authentication
-            '(?:\\S+(?::\\S*)?@)?' +
-            '(?:';
+      `${'^' +
+      // protocol identifier
+      '(?:(?:'}${this.schemes.join('|')})://)` +
+      // user:pass authentication
+      '(?:\\S+(?::\\S*)?@)?' +
+      '(?:';
 
     let tld = '(?:\\.(?:[a-z\\u00a1-\\uffff]{2,}))';
 
@@ -43,11 +43,11 @@ export default class UrlValidator extends Validator {
       tld += '?';
     } else {
       regex +=
-                // IP address exclusion
-                // private & local networks
-                '(?!(?:10|127)(?:\\.\\d{1,3}){3})' +
-                '(?!(?:169\\.254|192\\.168)(?:\\.\\d{1,3}){2})' +
-                '(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})';
+        // IP address exclusion
+        // private & local networks
+        '(?!(?:10|127)(?:\\.\\d{1,3}){3})' +
+        '(?!(?:169\\.254|192\\.168)(?:\\.\\d{1,3}){2})' +
+        '(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})';
     }
 
     regex +=

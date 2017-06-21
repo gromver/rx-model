@@ -16,7 +16,7 @@ export default class EmailValidator extends Validator {
       attribute,
     });
 
-        // Empty values are fine
+    // Empty values are fine
     if (!utils.isDefined(value) || utils.isEmpty(value)) {
       return Promise.resolve();
     }

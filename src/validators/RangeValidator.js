@@ -24,7 +24,7 @@ export default class RangeValidator extends Validator {
   }
 
   validate(value, attribute) {
-        // Empty values are fine
+    // Empty values are fine
     if (!utils.isDefined(value) || utils.isEmpty(value)) {
       return Promise.resolve();
     }

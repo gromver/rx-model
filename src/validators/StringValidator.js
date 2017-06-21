@@ -30,8 +30,8 @@ export default class StringValidator extends Validator {
   }
 
   validate(value, attribute) {
-        // Empty values are fine
-    if (!utils.isDefined(value)) {
+    // Empty values are fine
+    if (!utils.isDefined(value) || utils.isEmpty(value)) {
       return Promise.resolve();
     }
 
