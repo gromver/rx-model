@@ -264,4 +264,28 @@ describe('getFirstError life cycle', () => {
     model.set('url', '');
     expect(observer).toHaveBeenCalledTimes(3);
   });
+
+  test('AddScenario and RemoveScenario test', async () => {
+    const model = new ValidatorsModel({}, 'a');
+
+    expect(model.getScenario()).toEqual(['a']);
+
+    model.addScenario('b');
+    expect(model.getScenario()).toEqual(['a', 'b']);
+
+    model.addScenario(['a', 'b', 'c', 'd']);
+    expect(model.getScenario()).toEqual(['a', 'b', 'c', 'd']);
+
+    model.removeScenario(['a', 'd']);
+    expect(model.getScenario()).toEqual(['b', 'c']);
+
+    model.addScenario('a');
+    expect(model.getScenario()).toEqual(['b', 'c', 'a']);
+
+    model.removeScenario('a');
+    expect(model.getScenario()).toEqual(['b', 'c']);
+
+    model.removeScenario(['a', 'b', 'c', 'd']);
+    expect(model.getScenario()).toEqual([]);
+  });
 });

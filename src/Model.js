@@ -1,4 +1,4 @@
-import { fromJS, Iterable, Map } from 'immutable';
+import { fromJS, Iterable, Map, Set } from 'immutable';
 import { Subject } from 'rxjs/Subject';
 import { SuccessState, WarningState, ErrorState, PendingState, PristineState, MutationState } from './states';
 import ValidationTracker from './ValidationTracker';
@@ -166,7 +166,7 @@ export default class Model {
   /**
    * EXTEND THIS
    * подготовка модели перед событием onSubmit
-   * @param model
+   * @param data
    * @returns {{}}
    */
   prepareResultData(data) {
@@ -193,6 +193,34 @@ export default class Model {
    */
   getScenario() {
     return this.currentScenarios;
+  }
+
+  /**
+   * Установка сценария
+   * Сценариев может быть несколько
+   * @param {Array<string>|string} scenario
+   */
+  addScenario(scenario) {
+    //this.currentScenarios = (new Set([...this.currentScenarios, ...newScenarios])).toArray();
+    const newSc = typeof scenario === 'string' ? [scenario] : scenario;
+    const curSc = this.currentScenarios;
+
+    newSc.forEach(sc => curSc.indexOf(sc) === -1 && curSc.push(sc));
+
+    this.invalidateValidators();
+  }
+
+  /**
+   * Установка сценария
+   * Сценариев может быть несколько
+   * @param {Array<string>|string} scenario
+   */
+  removeScenario(scenario) {
+    const remSc = typeof scenario === 'string' ? [scenario] : scenario;
+
+    this.currentScenarios = this.currentScenarios.filter(sc => remSc.indexOf(sc) === -1);
+
+    this.invalidateValidators();
   }
 
   /**
