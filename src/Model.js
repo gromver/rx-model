@@ -53,6 +53,12 @@ export default class Model {
   validators;
 
   /**
+   * Подписка на перестройку валидаторов при изменении полей модели
+   * @type {Subscription}
+   */
+  iwSubscription;
+
+  /**
    * Current model's scenarios
    * @type {Array<string>}
    */
@@ -130,6 +136,19 @@ export default class Model {
 
   /**
    * EXTEND THIS
+   * invalidate rules cases
+   * Если возвращает объект:
+   * ключ сценарий => значение [ ...список аттрибутов, изменение которых приводит к изменению правил валидации ]
+   * Усли возвращает массив
+   * [ ...список аттрибутов, изменение которых приводит к изменению правил валидации не зависимо от сценария ]
+   * @returns {{}|[]}
+   */
+  invalidateWhen() {
+    return [];
+  }
+
+  /**
+   * EXTEND THIS
    * инициализация и подготовка модели с которой будет работать форма
    * Важно! возвращаемый объект должен быть простым -
    * то есть без наследования либо объектом Immutable.Map
@@ -203,14 +222,28 @@ export default class Model {
 
   setValidators(rules) {
     this.validators = rules;
+
+    if (this.iwSubscription) {
+      this.iwSubscription.unsubscribe();
+
+      this.iwSubscription = null;
+    }
+
+    const invalidateWhen = this.normalizeInvalidateWhen();
+
+    if (invalidateWhen.length) {
+      this.iwSubscription = this.getMutationObservable().when(invalidateWhen).subscribe(() => {
+        this.invalidateValidators();
+      });
+    }
   }
 
   /**
-   * Возвращает список доступных для валидирования полей
-   * либо undefined если нет ограничений
-   * @returns {Array<string>|undefined}
+   * Возвращает список доступных для редактирования полей
+   * либо пустой список если нет ограничений
+   * @returns {Array<string>}
    */
-  getValidatableAttributes() {
+  getAccessibleAttributes() {
     let result = [];
     const scenarios = this.scenarios();
 
@@ -222,16 +255,18 @@ export default class Model {
       }
     });
 
-    return result.length ? [...new Set(result)] : undefined;
+    return result.length ? [...new Set(result)] : result;
   }
 
   normalizeRules() {
     const rules = {};
 
-    const validatableAttributes = this.getValidatableAttributes();
+    const accessibleAttributes = this.getAccessibleAttributes();
+
+    const hasRestrictions = !!accessibleAttributes.length;
 
     Object.entries(this.rules()).forEach(([attribute, validator]) => {
-      if (validatableAttributes && validatableAttributes.indexOf(attribute) === -1) {
+      if (hasRestrictions && accessibleAttributes.indexOf(attribute) === -1) {
         return;
       }
 
@@ -273,6 +308,22 @@ export default class Model {
     }
   }
 
+  normalizeInvalidateWhen() {
+    const attributes = this.invalidateWhen();
+
+    if (Array.isArray(attributes)) {
+      return attributes;
+    } else {
+      let normalized = [];
+
+      Object.entries(attributes).forEach(([scenario, attributes]) => {
+        normalized = [...normalized, ...attributes];
+      });
+
+      return [...new Set(normalized)];
+    }
+  }
+
   invalidateValidators() {
     this.state = {};
 
@@ -282,10 +333,15 @@ export default class Model {
   /**
    * Set attribute value
    * attribute name can be deep: this.set('foo.bar', value)
-   * @param attribute
-   * @param value
+   * @param {string} attribute
+   * @param {*} value
+   * @param {boolean} safe
    */
-  set(attribute, value) {
+  set(attribute, value, safe = true) {
+    if (safe && !this.isAttributeEditable(attribute)) {
+      return;
+    }
+
     this.attributes = this.attributes.setIn(utils.resolveAttribute(attribute), value);
 
     this.mutationObservable.next(new MutationState({
@@ -311,13 +367,12 @@ export default class Model {
   /**
    * Set attributes
    * @param {Object} values
+   * @param {boolean} safe
    */
-  setAttributes(values) {
-    const validatableAttributes = this.getValidatableAttributes();
-
+  setAttributes(values, safe = true) {
     this.attributes = this.attributes.withMutations((model) => {
       Object.entries(values).forEach(([attribute, value]) => {
-        if (validatableAttributes && validatableAttributes.indexOf(attribute) === -1) {
+        if (safe && !this.isAttributeEditable(attribute)) {
           return;
         }
 
