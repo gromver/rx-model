@@ -30,9 +30,9 @@ export default class MultiValidator extends Validator {
 
   isSafe() {
     if (this.validators.length) {
-      const safeValidators = this.validators.filter(v => v.isSafe());
+      const unsafeValidators = this.validators.filter(v => !v.isSafe());
 
-      return !!safeValidators.length;
+      return !unsafeValidators.length;
     }
 
     return false;

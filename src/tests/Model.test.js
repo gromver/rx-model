@@ -113,15 +113,15 @@ describe('getFirstError life cycle', () => {
 
     model.setScenario(ValidatorsModel.SCENARIO_A);
 
-    expect(model.getValidatableAttributes()).toEqual(['presence', 'multiWithUnsafe']);
+    expect(model.getAccessibleAttributes()).toEqual(['presence', 'multiWithUnsafe']);
 
     model.setScenario([ValidatorsModel.SCENARIO_A]);
 
-    expect(model.getValidatableAttributes()).toEqual(['presence', 'multiWithUnsafe']);
+    expect(model.getAccessibleAttributes()).toEqual(['presence', 'multiWithUnsafe']);
 
     model.setScenario([ValidatorsModel.SCENARIO_A, ValidatorsModel.SCENARIO_B]);
 
-    expect(model.getValidatableAttributes()).toEqual(['presence', 'multiWithUnsafe', 'multi', 'notEditable']);
+    expect(model.getAccessibleAttributes()).toEqual(['presence', 'multiWithUnsafe', 'multi', 'notEditable']);
   });
 
   test('isScenario()', () => {
@@ -182,7 +182,7 @@ describe('getFirstError life cycle', () => {
     expect(model.isAttributeEditable('url')).toBe(false);
     expect(model.isAttributeEditable('multi')).toBe(true);
     expect(model.isAttributeEditable('notEditable')).toBe(false);
-    expect(model.isAttributeEditable('multiWithUnsafe')).toBe(true);
+    expect(model.isAttributeEditable('multiWithUnsafe')).toBe(false);
   });
 
   test('Model and ValidationTracker', async () => {
