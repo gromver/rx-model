@@ -570,7 +570,7 @@ export default class Model {
   }
 
   /**
-   *
+   * Returns an array of error states if exists
    * @returns {Array<ErrorState>}
    */
   getValidationErrors() {

@@ -1,6 +1,6 @@
 import { Subject } from 'rxjs/Subject';
 import { Set } from 'immutable';
-import { SuccessState, WarningState, ErrorState, PendingState, PristineState } from '../states';
+import { SuccessState, WarningState, ErrorState, PendingState, PristineState, UnvalidatedState } from '../states';
 
 export default class ValidationStateSubject extends Subject {
   changedFields = [];
@@ -10,6 +10,7 @@ export default class ValidationStateSubject extends Subject {
   pendingFields = [];
   pristineFields = [];
   errorFields = [];
+  unvalidatedFields = [];
 
   model;
   subscription;
@@ -84,6 +85,14 @@ export default class ValidationStateSubject extends Subject {
       })) return;
     }
 
+    if (this.unvalidatedFields.length) {
+      if (this.unvalidatedFields.find((attribute) => {
+          const curState = this.model.getValidationState(attribute);
+
+          return !(curState instanceof UnvalidatedState);
+        })) return;
+    }
+
     super.next(state);
   }
 
@@ -125,6 +134,12 @@ export default class ValidationStateSubject extends Subject {
 
   whenError(attributes) {
     this.errorFields = new Set([...this.errorFields, ...attributes]).toArray();
+
+    return this;
+  }
+
+  whenUnvalidated(attributes) {
+    this.unvalidatedFields = new Set([...this.unvalidatedFields, ...attributes]).toArray();
 
     return this;
   }
