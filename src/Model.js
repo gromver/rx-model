@@ -393,7 +393,7 @@ export default class Model {
       const hasRule = this.lookupArrayRule(attribute);
 
       if (hasRule) {
-        this.attributes.setIn(utils.resolveAttribute(attribute), new Collection.Indexed());
+        this.attributes = this.attributes.setIn(utils.resolveAttribute(attribute), new List());
 
         value.forEach((val, index) => {
           this.set(`${attribute}[${index}]`, val, safe);
@@ -406,11 +406,7 @@ export default class Model {
       const hasRules = this.lookupObjectRules(attribute);
 
       if (hasRules) {
-        this.attributes.setIn(utils.resolveAttribute(attribute), new Map());
-
-        // subAttrs.forEach(subAttr => {
-        //   this.set(`${attribute}.${subAttr}`, value[subAttr], safe);
-        // });
+        this.attributes = this.attributes.setIn(utils.resolveAttribute(attribute), new Map());
 
         Object.entries(value).forEach(([attr, val]) => {
           this.set(`${attribute}.${attr}`, val, safe);
@@ -429,14 +425,6 @@ export default class Model {
     }));
   }
 
-  // setAttributeValue(attribute, value) {
-  //   const path = utils.resolveAttribute(attribute);
-  //
-  //   const last = path[path.length - 1];
-  //
-  //   if (utils.isNumber(last) && )
-  // }
-
   attrPathToRulePath(attrPath) {
     return attrPath.replace(/\[\d+]/g, '[]');
   }
@@ -444,7 +432,6 @@ export default class Model {
   /**
    * Ищем в правилах валилации, правила для полей вложенных в правило для attribute
    * @param {string} attribute
-   * --@returns {[string]}  возвращает массив с именами аттрибутов вложенных в объект с валидацией (safe)
    * @returns {boolean}
    */
   lookupObjectRules(attribute) {
@@ -453,19 +440,6 @@ export default class Model {
     // экранируем спец символы
     const attrPathString = this.attrPathToRulePath(attribute).replace(/[!@#$%^&*()+=\-[\]\\';,./{}|":<>?~_]/g, "\\$&");
 
-    // const regExp = new RegExp(`^${attrPathString}\\.([a-zA-Z_0-9]+)$`);
-    //
-    // const res = [];
-    //
-    // attributes.filter(attr => {
-    //   const match = regExp.exec(attr);
-    //
-    //   if (match && match[1]) {
-    //     res.push(match[1]);
-    //   }
-    // });
-    //
-    // return res;
     const regExp = new RegExp(`^${attrPathString}\\.([a-zA-Z_0-9]+)$`);
 
     return !!attributes.find(attr => regExp.test(attr));

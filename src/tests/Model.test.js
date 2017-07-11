@@ -1,6 +1,6 @@
 import { SuccessState, PendingState, WarningState, ErrorState, PristineState, MutationState } from '../states';
 import { MultiValidator, PresenceValidator, UrlValidator, CustomValidator } from '../validators';
-import { Map } from 'immutable';
+import { Map, List } from 'immutable';
 import ValidatorsModel from './models/ValidatorsModel';
 import RulesTestModel from './models/RulesTestModel';
 import NestedRulesModel from './models/NestedRulesModel';
@@ -293,9 +293,6 @@ describe('getFirstError life cycle', () => {
   test('Test lookupObjectRules()', () => {
     const model = new NestedRulesModel();
 
-    // expect(model.lookupObjectRules('root')).toEqual(['level1_obj', 'level1_arr', 'level1_arrays', 'level1_arr_of_obj']);
-    // expect(model.lookupObjectRules('root.level1_arr')).toEqual([]);
-    // expect(model.lookupObjectRules('root.level1_obj')).toEqual(['level2_1', 'level2_2']);
     expect(model.lookupObjectRules('root')).toBe(true);
     expect(model.lookupObjectRules('root.level1_arr')).toBe(false);
     expect(model.lookupObjectRules('root.level1_obj')).toBe(true);
@@ -315,7 +312,7 @@ describe('getFirstError life cycle', () => {
     expect(model.lookupArrayRule('root.level1_arrays[][]')).toBe(false);
   });
 
-  test('Test Set()', () => {
+  test('Test set()', () => {
     const model = new NestedRulesModel();
 
     model.set('root', {
