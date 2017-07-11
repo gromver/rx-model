@@ -1,6 +1,6 @@
-import { fromJS, Iterable, Map, Set, List, Seq, Collection } from 'immutable';
+import { fromJS, Iterable, Map, Set, List } from 'immutable';
 import { Subject } from 'rxjs/Subject';
-import { SuccessState, WarningState, ErrorState, PendingState, PristineState, MutationState } from './states';
+import { SuccessState, WarningState, ErrorState, PendingState, PristineState, MutationState, UnvalidatedState } from './states';
 import ValidationTracker from './ValidationTracker';
 import Scenario from './Scenario';
 import { Message, Validator, MultiValidator } from './validators';
@@ -69,6 +69,7 @@ export default class Model {
 
     this.onValidationStateChange = this.onValidationStateChange.bind(this);
 
+    this.validationState = {};
     this.attributes = map;
     this.initialAttributes = map;
 
@@ -371,8 +372,11 @@ export default class Model {
   }
 
   invalidateValidators() {
-    // todo вместо {} сделать изменение всех имеющихся статусов валидации на UnknownState
-    this.validationState = {};
+    Object.keys(this.validationState).forEach(attribute => {
+      this.onValidationStateChange(new UnvalidatedState({
+        attribute
+      }))
+    });
 
     this.validators = undefined;
   }

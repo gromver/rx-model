@@ -5,6 +5,7 @@ import SuccessState from './SuccessState';
 import WarningState from './WarningState';
 import PristineState from './PristineState';
 import MutationState from './MutationState';
+import UnvalidatedState from './UnvalidatedState';
 
 export {
   State,
@@ -14,4 +15,5 @@ export {
   WarningState,
   PristineState,
   MutationState,
+  UnvalidatedState,
 };
