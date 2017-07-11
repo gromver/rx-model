@@ -1,4 +1,4 @@
-import { fromJS, Iterable, Map, Set } from 'immutable';
+import { fromJS, Iterable, Map, Set, List, Seq, Collection } from 'immutable';
 import { Subject } from 'rxjs/Subject';
 import { SuccessState, WarningState, ErrorState, PendingState, PristineState, MutationState } from './states';
 import ValidationTracker from './ValidationTracker';
@@ -32,7 +32,7 @@ export default class Model {
    * Validation state
    * @type {{}}
    */
-  state;
+  validationState;
 
   /**
    * Validation state's stream
@@ -98,19 +98,38 @@ export default class Model {
   }
 
   onValidationStateChange(state) {
-    this.setState(state);
+    this.setValidationState(state);
 
     this.validationObservable.next(state);
   }
 
-  setState(state) {
-    const curState = this.state[state.attribute];
+  setValidationState(state) {
+    const curState = this.validationState[state.attribute];
 
     if (curState instanceof PendingState) {
       curState.abort();
     }
 
-    this.state[state.attribute] = state;
+    this.validationState[state.attribute] = state;
+  }
+
+  /**
+   * Returns current attribute's validation state object or null
+   * @param attribute
+   * @returns {State|PendingState|WarningState|SuccessState|ErrorState|PristineState}
+   */
+  getValidationState(attribute) {
+    let state = this.validationState[attribute];
+
+    if (!state) {
+      state = new PristineState({
+        attribute,
+      });
+
+      this.setValidationState(state);
+    }
+
+    return state;
   }
 
   /**
@@ -201,7 +220,6 @@ export default class Model {
    * @param {Array<string>|string} scenario
    */
   addScenario(scenario) {
-    //this.currentScenarios = (new Set([...this.currentScenarios, ...newScenarios])).toArray();
     const newSc = typeof scenario === 'string' ? [scenario] : scenario;
     const curSc = this.currentScenarios;
 
@@ -353,29 +371,120 @@ export default class Model {
   }
 
   invalidateValidators() {
-    this.state = {};
+    // todo вместо {} сделать изменение всех имеющихся статусов валидации на UnknownState
+    this.validationState = {};
 
     this.validators = undefined;
   }
 
   /**
    * Set attribute value
-   * attribute name can be deep: this.set('foo.bar', value)
    * @param {string} attribute
    * @param {*} value
    * @param {boolean} safe
    */
   set(attribute, value, safe = true) {
-    if (safe && !this.isAttributeEditable(attribute)) {
+    if (safe && !this.isAttributeSafe(attribute)) {
       return;
     }
 
-    this.attributes = this.attributes.setIn(utils.resolveAttribute(attribute), value);
+    if (Array.isArray(value)) {
+      // lookup
+      const hasRule = this.lookupArrayRule(attribute);
+
+      if (hasRule) {
+        this.attributes.setIn(utils.resolveAttribute(attribute), new Collection.Indexed());
+
+        value.forEach((val, index) => {
+          this.set(`${attribute}[${index}]`, val, safe);
+        });
+      } else {
+        this.attributes = this.attributes.setIn(utils.resolveAttribute(attribute), value);
+      }
+    } else if (value === Object(value)) {
+      // lookup
+      const hasRules = this.lookupObjectRules(attribute);
+
+      if (hasRules) {
+        this.attributes.setIn(utils.resolveAttribute(attribute), new Map());
+
+        // subAttrs.forEach(subAttr => {
+        //   this.set(`${attribute}.${subAttr}`, value[subAttr], safe);
+        // });
+
+        Object.entries(value).forEach(([attr, val]) => {
+          this.set(`${attribute}.${attr}`, val, safe);
+        });
+      } else {
+        this.attributes = this.attributes.setIn(utils.resolveAttribute(attribute), value);
+      }
+    } else {
+      // не объекты и массивы устанавливаются без магии
+      this.attributes = this.attributes.setIn(utils.resolveAttribute(attribute), value);
+    }
 
     this.mutationObservable.next(new MutationState({
       attribute,
       value
     }));
+  }
+
+  // setAttributeValue(attribute, value) {
+  //   const path = utils.resolveAttribute(attribute);
+  //
+  //   const last = path[path.length - 1];
+  //
+  //   if (utils.isNumber(last) && )
+  // }
+
+  attrPathToRulePath(attrPath) {
+    return attrPath.replace(/\[\d+]/g, '[]');
+  }
+
+  /**
+   * Ищем в правилах валилации, правила для полей вложенных в правило для attribute
+   * @param {string} attribute
+   * --@returns {[string]}  возвращает массив с именами аттрибутов вложенных в объект с валидацией (safe)
+   * @returns {boolean}
+   */
+  lookupObjectRules(attribute) {
+    const attributes = Object.keys(this.getValidators());
+
+    // экранируем спец символы
+    const attrPathString = this.attrPathToRulePath(attribute).replace(/[!@#$%^&*()+=\-[\]\\';,./{}|":<>?~_]/g, "\\$&");
+
+    // const regExp = new RegExp(`^${attrPathString}\\.([a-zA-Z_0-9]+)$`);
+    //
+    // const res = [];
+    //
+    // attributes.filter(attr => {
+    //   const match = regExp.exec(attr);
+    //
+    //   if (match && match[1]) {
+    //     res.push(match[1]);
+    //   }
+    // });
+    //
+    // return res;
+    const regExp = new RegExp(`^${attrPathString}\\.([a-zA-Z_0-9]+)$`);
+
+    return !!attributes.find(attr => regExp.test(attr));
+  }
+
+  /**
+   * Ищем в правилах валилации, правило для далицации массива вложенное в правило для attribute
+   * @param {string} attribute
+   * @returns {boolean}
+   */
+  lookupArrayRule(attribute) {
+    const attributes = Object.keys(this.getValidators());
+
+    // экранируем спец символы
+    const attrPathString = this.attrPathToRulePath(attribute).replace(/[!@#$%^&*()+=\-[\]\\';,./{}|":<>?~_]/g, "\\$&");
+
+    const regExp = new RegExp(`^${attrPathString}\\[]$`);
+
+    return !!attributes.find(attr => regExp.test(attr));
   }
 
   /**
@@ -398,20 +507,7 @@ export default class Model {
    * @param {boolean} safe
    */
   setAttributes(values, safe = true) {
-    this.attributes = this.attributes.withMutations((model) => {
-      Object.entries(values).forEach(([attribute, value]) => {
-        if (safe && !this.isAttributeEditable(attribute)) {
-          return;
-        }
-
-        model.setIn(utils.resolveAttribute(attribute), value);
-
-        this.mutationObservable.next(new MutationState({
-          attribute,
-          value
-        }));
-      });
-    });
+    Object.entries(values).forEach(([attribute, value]) => this.set(attribute, value, safe));
   }
 
   /**
@@ -439,31 +535,12 @@ export default class Model {
    */
 
   /**
-   *
-   * @param attribute
-   * @returns {PendingState|WarningState|SuccessState|ErrorState|PristineState}
-   */
-  getAttributeState(attribute) {
-    let state = this.state[attribute];
-
-    if (!state) {
-      state = new PristineState({
-        attribute,
-      });
-
-      this.setState(state);
-    }
-
-    return state;
-  }
-
-  /**
    * Returns current attribute state object or null
    * @param {string} attribute
    * @returns {string}
    */
-  getValidationState(attribute) {
-    return this.getAttributeState(attribute).state;
+  getValidationStatus(attribute) {
+    return this.getValidationState(attribute).status;
   }
 
   /**
@@ -476,17 +553,9 @@ export default class Model {
    * @returns {Message|string|null}
    */
   getValidationError(attribute) {
-    const state = this.getAttributeState(attribute);
+    const state = this.getValidationState(attribute);
 
     return state && (state instanceof ErrorState) && state.message || null;
-  }
-
-  /**
-   *
-   * @returns {Array<ErrorState>}
-   */
-  getValidationErrors() {
-    return Object.values(this.state).filter(state => state instanceof ErrorState);
   }
 
   /**
@@ -495,7 +564,7 @@ export default class Model {
    * @returns {Message|string|null}
    */
   getValidationMessage(attribute) {
-    const state = this.getAttributeState(attribute);
+    const state = this.getValidationState(attribute);
 
     return state && state.message || null;
   }
@@ -506,9 +575,36 @@ export default class Model {
    * @returns {Message|string|null}
    */
   getValidationWarning(attribute) {
-    const state = this.getAttributeState(attribute);
+    const state = this.getValidationState(attribute);
 
     return state && (state instanceof WarningState) && state.message || null;
+  }
+
+  /**
+   * Get attributes's warning validation message
+   * @param {string} attribute
+   * @returns {boolean}
+   */
+  getValidationPending(attribute) {
+    const state = this.getValidationState(attribute);
+
+    return state && state instanceof PendingState || false;
+  }
+
+  /**
+   *
+   * @returns {Array<ErrorState>}
+   */
+  getValidationErrors() {
+    return Object.values(this.validationState).filter(state => state instanceof ErrorState);
+  }
+
+  /**
+   * Returns an array of warning states if exists
+   * @returns {Array<WarningState>}
+   */
+  getValidationWarnings() {
+    return Object.values(this.validationState).filter(state => state instanceof WarningState);
   }
 
   /**
@@ -516,24 +612,15 @@ export default class Model {
    * @returns {ErrorState|undefined}
    */
   getFirstError() {
-    const errors = Object.values(this.state).filter(state => state instanceof ErrorState).map(state => state.attribute);
+    const errors = Object.values(this.validationState).filter(state => state instanceof ErrorState).map(state => state.attribute);
     const rules = Object.keys(this.getValidators());
     const firstErrorAttribute = rules.find(attribute => errors.indexOf(attribute) !== -1);
 
-    return firstErrorAttribute ? this.getAttributeState(firstErrorAttribute) : undefined;
+    return firstErrorAttribute ? this.getValidationState(firstErrorAttribute) : undefined;
   }
 
   hasErrors() {
-    return !!Object.values(this.state).find(state => state instanceof ErrorState);
-  }
-
-  /**
-   * Is model valid
-   * TODO?: учитывать наличие состояния для всех аттрибутов у которых есть валидаторы
-   * @returns {boolean}
-   */
-  isModelValid() {
-    return !this.hasErrors();
+    return !!Object.values(this.validationState).find(state => state instanceof ErrorState);
   }
 
   isModelChanged() {
@@ -546,10 +633,10 @@ export default class Model {
     return this.get(attribute) !== this.getInitialAttribute(attribute);
   }
 
-  isAttributeEditable(attribute) {
+  isAttributeSafe(attribute) {
     const validators = this.getValidators();
 
-    const validator = validators[attribute];
+    const validator = validators[this.attrPathToRulePath(attribute)];
 
     if (validator) {
       return validator.isSafe();

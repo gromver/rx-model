@@ -1,5 +1,5 @@
 import { is } from 'immutable';
-import { PendingState, SuccessState, WarningState, ErrorState, PristineState } from './states';
+import { PendingState, SuccessState, WarningState, ErrorState } from './states';
 import utils from './utils';
 
 /**
@@ -22,7 +22,7 @@ export default class ValidationTracker {
   onPushState;
 
   validateAttribute(model, attribute, validator) {
-    const cached = this.cache[attribute];
+    const cached = this.getAttributeCache(attribute);
     const value = utils.getModelAttribute(model, attribute);
 
     let isChanged = true;
@@ -51,7 +51,7 @@ export default class ValidationTracker {
             attribute,
           });
 
-          this.cache[attribute] = [value, validator];
+          this.setAttributeCache(attribute, value, validator);
 
           this.setAttributeState(attribute, state);
 
@@ -66,7 +66,7 @@ export default class ValidationTracker {
             message: errorMessage,
           });
 
-          this.cache[attribute] = [value, validator];
+          this.setAttributeCache(attribute, value, validator);
 
           this.setAttributeState(attribute, state);
 
@@ -100,11 +100,41 @@ export default class ValidationTracker {
     this.onPushState && this.onPushState(changes);
   }
 
-  setAttributeState(attr, state) {
-    this.state[attr] = state;
+  /**
+   * Set attribute validation state
+   * @param {string} attribute
+   * @param {PendingState|SuccessState|WarningState|ErrorState} state
+   */
+  setAttributeState(attribute, state) {
+    this.state[attribute] = state;
   }
 
+  /**
+   * Get attribute validation state
+   * @param {string} attribute
+   * @returns {PendingState|SuccessState|WarningState|ErrorState}
+   */
   getAttributeState(attribute) {
     return this.state[attribute];
+  }
+
+
+  /**
+   * Set attribute cache
+   * @param {string} attribute
+   * @param {*} value
+   * @param {Validator} validator
+   */
+  setAttributeCache(attribute, value, validator) {
+    this.cache[attribute] = [value, validator];
+  }
+
+  /**
+   * Get attribute cache
+   * @param {string} attribute
+   * @return {Array} [attrValue, attrValidator]
+   */
+  getAttributeCache(attribute) {
+    return this.cache[attribute];
   }
 }

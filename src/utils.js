@@ -173,10 +173,26 @@ const utils = {
   },
 
   resolveAttribute(attribute) {
-    let path;
+    let path = [];
 
     if (typeof attribute === 'string') {
-      path = attribute.split('.');
+      let slugs = attribute.split('.');
+
+      slugs.forEach(slug => {
+        let match = /([a-zA-Z_0-9]+)/g.exec(slug);
+
+        if (!match) {
+          throw new Error('resolveAttribute - given attribute has a bad format.')
+        }
+
+        path.push(match[0]);
+
+        const regExp = /\[(\d+)]/g;
+
+        while (match = regExp.exec(slug)) {
+          path.push(+match[1])
+        }
+      });
     } else {
       throw new Error('resolveAttribute - attribute must be a string.');
     }

@@ -38,7 +38,7 @@ export default class ValidationStateSubject extends Subject {
 
     if (this.validFields.length) {
       if (this.validFields.find((attribute) => {
-        const curState = this.model.getAttributeState(attribute);
+        const curState = this.model.getValidationState(attribute);
 
         return !((curState instanceof SuccessState) || (curState instanceof WarningState));
       })) return;
@@ -46,7 +46,7 @@ export default class ValidationStateSubject extends Subject {
 
     if (this.successFields.length) {
       if (this.successFields.find((attribute) => {
-        const curState = this.model.getAttributeState(attribute);
+        const curState = this.model.getValidationState(attribute);
 
         return !(curState instanceof SuccessState);
       })) return;
@@ -54,7 +54,7 @@ export default class ValidationStateSubject extends Subject {
 
     if (this.warningFields.length) {
       if (this.warningFields.find((attribute) => {
-        const curState = this.model.getAttributeState(attribute);
+        const curState = this.model.getValidationState(attribute);
 
         return !(curState instanceof WarningState);
       })) return;
@@ -62,7 +62,7 @@ export default class ValidationStateSubject extends Subject {
 
     if (this.pendingFields.length) {
       if (this.pendingFields.find((attribute) => {
-        const curState = this.model.getAttributeState(attribute);
+        const curState = this.model.getValidationState(attribute);
 
         return !(curState instanceof PendingState);
       })) return;
@@ -70,7 +70,7 @@ export default class ValidationStateSubject extends Subject {
 
     if (this.pristineFields.length) {
       if (this.pristineFields.find((attribute) => {
-          const curState = this.model.getAttributeState(attribute);
+          const curState = this.model.getValidationState(attribute);
 
           return !(curState instanceof PristineState);
         })) return;
@@ -78,7 +78,7 @@ export default class ValidationStateSubject extends Subject {
 
     if (this.errorFields.length) {
       if (this.errorFields.find((attribute) => {
-        const curState = this.model.getAttributeState(attribute);
+        const curState = this.model.getValidationState(attribute);
 
         return !(curState instanceof ErrorState);
       })) return;

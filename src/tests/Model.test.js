@@ -3,6 +3,7 @@ import { MultiValidator, PresenceValidator, UrlValidator, CustomValidator } from
 import { Map } from 'immutable';
 import ValidatorsModel from './models/ValidatorsModel';
 import RulesTestModel from './models/RulesTestModel';
+import NestedRulesModel from './models/NestedRulesModel';
 
 describe('Test Model.js', () => {
   const data = { presence: 'bar' };
@@ -161,28 +162,28 @@ describe('getFirstError life cycle', () => {
   test('isAttributeEditable()', () => {
     const model = new ValidatorsModel();
 
-    expect(model.isAttributeEditable('presence')).toBe(true);
-    expect(model.isAttributeEditable('url')).toBe(true);
-    expect(model.isAttributeEditable('multi')).toBe(true);
-    expect(model.isAttributeEditable('notEditable')).toBe(false);
-    expect(model.isAttributeEditable('multiWithUnsafe')).toBe(true);
+    expect(model.isAttributeSafe('presence')).toBe(true);
+    expect(model.isAttributeSafe('url')).toBe(true);
+    expect(model.isAttributeSafe('multi')).toBe(true);
+    expect(model.isAttributeSafe('notEditable')).toBe(false);
+    expect(model.isAttributeSafe('multiWithUnsafe')).toBe(true);
 
     model.setScenario(ValidatorsModel.SCENARIO_A);
-    expect(model.isAttributeEditable('presence')).toBe(true);
-    expect(model.isAttributeEditable('url')).toBe(false);
-    expect(model.isAttributeEditable('multi')).toBe(false);
-    expect(model.isAttributeEditable('notEditable')).toBe(false);
-    expect(model.isAttributeEditable('multiWithUnsafe')).toBe(false);
+    expect(model.isAttributeSafe('presence')).toBe(true);
+    expect(model.isAttributeSafe('url')).toBe(false);
+    expect(model.isAttributeSafe('multi')).toBe(false);
+    expect(model.isAttributeSafe('notEditable')).toBe(false);
+    expect(model.isAttributeSafe('multiWithUnsafe')).toBe(false);
 
     model.setScenario(ValidatorsModel.SCENARIO_B);
-    expect(model.isAttributeEditable('multiWithUnsafe')).toBe(true);
+    expect(model.isAttributeSafe('multiWithUnsafe')).toBe(true);
 
     model.setScenario([ValidatorsModel.SCENARIO_A, ValidatorsModel.SCENARIO_B]);
-    expect(model.isAttributeEditable('presence')).toBe(true);
-    expect(model.isAttributeEditable('url')).toBe(false);
-    expect(model.isAttributeEditable('multi')).toBe(true);
-    expect(model.isAttributeEditable('notEditable')).toBe(false);
-    expect(model.isAttributeEditable('multiWithUnsafe')).toBe(false);
+    expect(model.isAttributeSafe('presence')).toBe(true);
+    expect(model.isAttributeSafe('url')).toBe(false);
+    expect(model.isAttributeSafe('multi')).toBe(true);
+    expect(model.isAttributeSafe('notEditable')).toBe(false);
+    expect(model.isAttributeSafe('multiWithUnsafe')).toBe(false);
   });
 
   test('Model and ValidationTracker', async () => {
@@ -287,5 +288,75 @@ describe('getFirstError life cycle', () => {
 
     model.removeScenario(['a', 'b', 'c', 'd']);
     expect(model.getScenario()).toEqual([]);
+  });
+
+  test('Test lookupObjectRules()', () => {
+    const model = new NestedRulesModel();
+
+    // expect(model.lookupObjectRules('root')).toEqual(['level1_obj', 'level1_arr', 'level1_arrays', 'level1_arr_of_obj']);
+    // expect(model.lookupObjectRules('root.level1_arr')).toEqual([]);
+    // expect(model.lookupObjectRules('root.level1_obj')).toEqual(['level2_1', 'level2_2']);
+    expect(model.lookupObjectRules('root')).toBe(true);
+    expect(model.lookupObjectRules('root.level1_arr')).toBe(false);
+    expect(model.lookupObjectRules('root.level1_obj')).toBe(true);
+  });
+
+  test('Test lookupArrayRule()', () => {
+    const model = new NestedRulesModel();
+
+    expect(model.lookupArrayRule('root')).toBe(false);
+    expect(model.lookupArrayRule('root.level1_arr')).toBe(true);
+    expect(model.lookupArrayRule('root.level1_arr[]')).toBe(false);
+    expect(model.lookupArrayRule('root.level1_obj')).toBe(false);
+    expect(model.lookupArrayRule('root.level1_obj.level2_1')).toBe(false);
+    expect(model.lookupArrayRule('root.level1_obj.level2_1')).toBe(false);
+    expect(model.lookupArrayRule('root.level1_arrays')).toBe(true);
+    expect(model.lookupArrayRule('root.level1_arrays[]')).toBe(true);
+    expect(model.lookupArrayRule('root.level1_arrays[][]')).toBe(false);
+  });
+
+  test('Test Set()', () => {
+    const model = new NestedRulesModel();
+
+    model.set('root', {
+      level1_obj: {
+        level2_1: true,
+        level2_2: true,
+        level2_unsafe_1: true,
+        level2_unsafe_2: true,
+      },
+      level1_arr: [1,2,[3,4,5], { a: 'a', b: 'b' }],
+      level1_arrays: [1,2,[3,4,5]],
+      level1_unsafe: true,
+      level1_arr_of_obj: [
+        {
+          level2_1: true,
+          unsafe: true
+        },
+        {
+          level2_2: true,
+          unsafe: true
+        }
+      ]
+    });
+
+    expect(model.getAttributes()).toEqual({
+      root: {
+        level1_obj: {
+          level2_1: true,
+          level2_2: true,
+        },
+        level1_arr: [1,2,[3,4,5], { a: 'a', b: 'b' }],
+        level1_arrays: [1,2,[3,4,5]],
+        level1_arr_of_obj: [
+          {
+            level2_1: true,
+          },
+          {
+            level2_2: true,
+          }
+        ]
+      }
+    })
   });
 });
