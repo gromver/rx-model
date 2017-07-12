@@ -64,11 +64,18 @@ export default class Model {
    */
   currentScenarios;
 
+  /**
+   * External context params
+   * @type {{}}
+   */
+  context;
+
   constructor(data = {}, scenario = Model.SCENARIO_DEFAULT) {
     const map = fromJS(this.prepareSourceData(data));
 
     this.onValidationStateChange = this.onValidationStateChange.bind(this);
 
+    this.context = {};
     this.validationState = {};
     this.attributes = map;
     this.initialAttributes = map;
@@ -191,6 +198,28 @@ export default class Model {
    */
   prepareResultData(data) {
     return data;
+  }
+
+  /**
+   * Context
+   */
+
+  /**
+   * Set external context params
+   * @param {{}} context
+   */
+  setContext(context) {
+    this.context = context;
+
+    this.invalidateValidators();
+  }
+
+  /**
+   * Get external context params
+   * @returns {{}}
+   */
+  getContext() {
+    return this.context;
   }
 
   /**
