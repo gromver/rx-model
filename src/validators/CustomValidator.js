@@ -13,8 +13,8 @@ export default class CustomValidator extends Validator {
     this.func = func;
   }
 
-  validate(value, attribute) {
-    return this.func(value, attribute);
+  validate(value, attribute, model) {
+    return this.func(value, attribute, model);
   }
 }
 

@@ -2,8 +2,12 @@ import Message from './Message';
 import { Map } from 'immutable';
 
 export default class Validator {
-  createMessage(message, bindings) {
+  static createMessage(message, bindings) {
     return new Message(message, bindings);
+  }
+
+  createMessage(message, bindings) {
+    return Validator.createMessage(message, bindings);
   }
 
   validate(value, attribute, model) {
