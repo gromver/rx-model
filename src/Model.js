@@ -70,16 +70,23 @@ export default class Model {
    */
   context;
 
-  constructor(data = {}, scenario = Model.SCENARIO_DEFAULT) {
+  /**
+   *
+   * @param {{}} data
+   * @param {{}} context
+   * @param {string|[string]} scenario
+   */
+  constructor(data = {}, context = {}, scenario = Model.SCENARIO_DEFAULT) {
+    this.context = context;
+
     const map = fromJS(this.prepareSourceData(data));
 
-    this.onValidationStateChange = this.onValidationStateChange.bind(this);
-
-    this.context = {};
-    this.validationState = {};
     this.attributes = map;
     this.initialAttributes = map;
 
+    this.onValidationStateChange = this.onValidationStateChange.bind(this);
+
+    this.validationState = {};
     this.validationTracker = new ValidationTracker(this.onValidationStateChange);
 
     this.setScenario(scenario);

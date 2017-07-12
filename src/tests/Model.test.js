@@ -267,7 +267,7 @@ describe('getFirstError life cycle', () => {
   });
 
   test('AddScenario and RemoveScenario test', async () => {
-    const model = new ValidatorsModel({}, 'a');
+    const model = new ValidatorsModel({}, {}, 'a');
 
     expect(model.getScenario()).toEqual(['a']);
 
