@@ -3,7 +3,7 @@ Model powered by RxJs and Immutable Js
 
 Библиотека для создания валидируемых моделей и валидаторов. 
 
-## Что дает?
+## Возможности
 - Описание структуры данных любой вложенности
 - Контроль доступа к полям модели
 - Простое и управляемое валидирование данных
@@ -24,7 +24,7 @@ import { PresenceValidator, EmailValidator, StringValidator } from 'rx-model/val
 
 // Модель представляет из себя данные и бизнес логику по работе с ними.
 class BasicModel extends Model {
-  // опишем правила валидации
+  // правила валидации
   rules() {
     return {
       // name - обязательное поле
@@ -56,7 +56,7 @@ class BasicModel extends Model {
 }
 
 async function run() {
-  // создадим пустую модель
+  // создадим модель с начальными данными
   let model = new BasicModel({
     // объект с начальными данными (например редактируемая сущность из БД)
     name: 'Guest'
@@ -115,7 +115,7 @@ import { PresenceValidator, EmailValidator, StringValidator, CompareValidator, C
 
 // Создадим модель для авторизации, регистрации пользователя
 class UserModel extends Model {
-  // опишем правила валидации
+  // правила валидации
   rules() {
     return {
       name: new PresenceValidator(),
