@@ -13,9 +13,12 @@ import CompareValidator from './CompareValidator';
 import DateValidator from './DateValidator';
 import UrlValidator from './UrlValidator';
 
+const SafeValidator = Validator;
+
 export {
   Message,
   Validator,
+  SafeValidator,
   UnsafeValidator,
   PresenceValidator,
   MultiValidator,
