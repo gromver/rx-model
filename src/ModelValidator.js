@@ -27,7 +27,7 @@ export default class ModelValidator {
 
     Object.entries(this.rules).forEach(([attribute, validator]) => {
       if (validator) {
-        jobs.push(this.stateTracker.validateAttribute(this.model.attributes, attribute, validator));
+        jobs.push(this.stateTracker.validateAttribute(this.model, attribute, validator));
       }
     });
 

@@ -1,6 +1,5 @@
 import { is } from 'immutable';
 import { PendingState, SuccessState, WarningState, ErrorState } from './states';
-import utils from './utils';
 
 /**
  * Хелпер для валидации атрибутов модели, запускает процес валидации аттрибута модели,
@@ -23,7 +22,7 @@ export default class ValidationTracker {
 
   validateAttribute(model, attribute, validator) {
     const cached = this.getAttributeCache(attribute);
-    const value = utils.getModelAttribute(model, attribute);
+    const value = model.get(attribute);
 
     let isChanged = true;
 

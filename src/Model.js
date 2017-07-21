@@ -679,7 +679,7 @@ export default class Model {
       const validator = validators[attribute];
 
       if (validator) {
-        jobs.push(this.validationTracker.validateAttribute(this.attributes, attribute, validator));
+        jobs.push(this.validationTracker.validateAttribute(this, attribute, validator));
       }
     });
 
