@@ -2,6 +2,7 @@ import { Subject } from 'rxjs/Subject';
 import Model from './Model';
 import { StateMutation, UnvalidatedState } from './states';
 import StateMutationSubject from './rx/StateMutationSubject';
+import FormSubject from './rx/FormSubject';
 
 export default class Form extends Model {
   /**
@@ -55,6 +56,18 @@ export default class Form extends Model {
     return new StateMutationSubject(this);
   }
 
+  /**
+   * Aggregated stream
+   * @returns {FormSubject}
+   */
+  getObservable() {
+    return new FormSubject(this);
+  }
+
+  /**
+   * Mark attribute as dirty
+   * @param attribute
+   */
   markAsDirty(attribute) {
     if (this.dirtyAttributes.indexOf(attribute) === -1) {
       this.dirtyAttributes.push(attribute);
