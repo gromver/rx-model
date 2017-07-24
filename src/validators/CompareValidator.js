@@ -32,7 +32,7 @@ export default class CompareValidator extends Validator {
     let compareValue;
 
     if (this.compareAttribute) {
-      compareValue = utils.getModelAttribute(model, this.compareAttribute);
+      compareValue = model.get(this.compareAttribute);
     } else {
       compareValue = this.compareValue;
     }
