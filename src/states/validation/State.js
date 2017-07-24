@@ -1,7 +1,6 @@
 /**
- * Created by roman on 25.04.17.
+ * Base validation state class
  */
-
 export default class State {
   /**
    * @type {string}

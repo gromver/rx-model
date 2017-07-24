@@ -30,7 +30,7 @@ export default class ValidationStateSubject extends Subject {
 
   /**
    * Extended
-   * @param {SuccessState|WarningState|ErrorState|PendingState} state
+   * @param {SuccessState|WarningState|ErrorState|PendingState|UnvalidatedState} state
    */
   next(state) {
     if (this.changedFields.length) {
@@ -96,48 +96,95 @@ export default class ValidationStateSubject extends Subject {
     super.next(state);
   }
 
+  /**
+   * When model's attribute validation state changed
+   * @param {Array<string>} attributes
+   * @returns {ValidationStateSubject}
+   */
   when(attributes) {
     this.changedFields = new Set([...this.changedFields, ...attributes]).toArray();
 
     return this;
   }
 
+  /**
+   * When model's attribute validation state valid
+   * Use in chain with when()
+   * @param {Array<string>} attributes
+   * @returns {ValidationStateSubject}
+   */
   whenValid(attributes) {
     this.validFields = new Set([...this.validFields, ...attributes]).toArray();
 
     return this;
   }
 
+  /**
+   * When model's attribute validation state success
+   * Use in chain with when()
+   * @param {Array<string>} attributes
+   * @returns {ValidationStateSubject}
+   */
   whenSuccess(attributes) {
     this.successFields = new Set([...this.successFields, ...attributes]).toArray();
 
     return this;
   }
 
+  /**
+   * When model's attribute validation state warning
+   * Use in chain with when()
+   * @param {Array<string>} attributes
+   * @returns {ValidationStateSubject}
+   */
   whenWarning(attributes) {
     this.warningFields = new Set([...this.warningFields, ...attributes]).toArray();
 
     return this;
   }
 
+  /**
+   * When model's attribute validation state pending
+   * Use in chain with when()
+   * @param {Array<string>} attributes
+   * @returns {ValidationStateSubject}
+   */
   whenPending(attributes) {
     this.pendingFields = new Set([...this.pendingFields, ...attributes]).toArray();
 
     return this;
   }
 
+  /**
+   * When model's attribute validation state pristine
+   * Use in chain with when()
+   * @param {Array<string>} attributes
+   * @returns {ValidationStateSubject}
+   */
   whenPristine(attributes) {
     this.pristineFields = new Set([...this.pristineFields, ...attributes]).toArray();
 
     return this;
   }
 
+  /**
+   * When model's attribute validation state error
+   * Use in chain with when()
+   * @param {Array<string>} attributes
+   * @returns {ValidationStateSubject}
+   */
   whenError(attributes) {
     this.errorFields = new Set([...this.errorFields, ...attributes]).toArray();
 
     return this;
   }
 
+  /**
+   * When model's attribute validation state unvalidated
+   * Use in chain with when()
+   * @param {Array<string>} attributes
+   * @returns {ValidationStateSubject}
+   */
   whenUnvalidated(attributes) {
     this.unvalidatedFields = new Set([...this.unvalidatedFields, ...attributes]).toArray();
 

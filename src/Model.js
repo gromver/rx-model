@@ -1,11 +1,14 @@
 import { fromJS, Iterable, Map, Set, List } from 'immutable';
 import { Subject } from 'rxjs/Subject';
-import { SuccessState, WarningState, ErrorState, PendingState, PristineState, MutationState, UnvalidatedState } from './states';
+import {
+  AttributeMutation,
+  SuccessState, WarningState, ErrorState, PendingState, PristineState, UnvalidatedState,
+} from './states';
 import ValidationTracker from './ValidationTracker';
 import Scenario from './Scenario';
 import { Message, Validator, MultiValidator } from './validators';
 import ValidationStateSubject from './rx/ValidationStateSubject';
-import MutationStateSubject from './rx/MutationStateSubject';
+import AttributeMutationSubject from './rx/AttributeMutationSubject';
 import utils from './utils';
 
 export default class Model {
@@ -44,7 +47,7 @@ export default class Model {
    * Attribute's mutation stream
    * @type {Subject}
    */
-  mutationObservable = new Subject();
+  attributeObservable = new Subject();
 
   /**
    * Список валидаторов
@@ -105,11 +108,11 @@ export default class Model {
   }
 
   /**
-   * Model's mutation state stream
-   * @returns {MutationStateSubject}
+   * Model's attribute mutation state stream
+   * @returns {AttributeMutationSubject}
    */
-  getMutationObservable() {
-    return new MutationStateSubject(this);
+  getAttributeObservable() {
+    return new AttributeMutationSubject(this);
   }
 
   onValidationStateChange(state) {
@@ -315,7 +318,7 @@ export default class Model {
     const invalidateWhen = this.normalizeInvalidateWhen();
 
     if (invalidateWhen.length) {
-      this.iwSubscription = this.getMutationObservable().when(invalidateWhen).subscribe(() => {
+      this.iwSubscription = this.getAttributeObservable().when(invalidateWhen).subscribe(() => {
         this.invalidateValidators();
       });
     }
@@ -459,10 +462,7 @@ export default class Model {
       this.attributes = this.attributes.setIn(utils.resolveAttribute(attribute), value);
     }
 
-    this.mutationObservable.next(new MutationState({
-      attribute,
-      value
-    }));
+    this.attributeObservable.next(new AttributeMutation(attribute, value));
   }
 
   attrPathToRulePath(attrPath) {

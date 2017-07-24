@@ -1,7 +1,7 @@
 import { Subject } from 'rxjs/Subject';
 import { Set } from 'immutable';
 
-export default class MutationStateSubject extends Subject {
+export default class AttributeMutationSubject extends Subject {
   mutatedFields = [];
 
   model;
@@ -11,7 +11,7 @@ export default class MutationStateSubject extends Subject {
     super();
 
     this.model = model;
-    this.subscription = model.mutationObservable.subscribe(this);
+    this.subscription = model.attributeObservable.subscribe(this);
   }
 
   unsubscribe() {
@@ -22,16 +22,24 @@ export default class MutationStateSubject extends Subject {
 
   /**
    * Extended
-   * @param {MutationState} state
+   * @param {AttributeMutation} state
    */
   next(state) {
-    if (this.mutatedFields.length) {
-      if (this.mutatedFields.indexOf(state.attribute) === -1) return;
+    if (
+      this.mutatedFields.length
+      && this.mutatedFields.indexOf(state.attribute) === -1
+    ) {
+      return;
     }
 
     super.next(state);
   }
 
+  /**
+   * When model attribute state changed
+   * @param {Array<string>} attributes
+   * @returns {AttributeMutationSubject}
+   */
   when(attributes) {
     this.mutatedFields = new Set([...this.mutatedFields, ...attributes]).toArray();
 

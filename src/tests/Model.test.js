@@ -1,4 +1,4 @@
-import { SuccessState, PendingState, WarningState, ErrorState, PristineState, MutationState } from '../states';
+import { SuccessState, PendingState, WarningState, ErrorState, PristineState, AttributeMutation } from '../states';
 import { MultiValidator, PresenceValidator, UrlValidator, CustomValidator } from '../validators';
 import { Map, List } from 'immutable';
 import ValidatorsModel from './models/ValidatorsModel';
@@ -236,7 +236,7 @@ describe('getFirstError life cycle', () => {
     const model = new ValidatorsModel();
     const observer = jest.fn();
 
-    const observable = model.getMutationObservable();
+    const observable = model.getAttributeObservable();
 
     observable.subscribe(observer);
 
@@ -246,10 +246,10 @@ describe('getFirstError life cycle', () => {
     model.set('url', '');
 
     expect(observer).toHaveBeenCalledTimes(4);
-    expect(observer.mock.calls[0][0]).toEqual(expect.any(MutationState));
-    expect(observer.mock.calls[1][0]).toEqual(expect.any(MutationState));
-    expect(observer.mock.calls[2][0]).toEqual(expect.any(MutationState));
-    expect(observer.mock.calls[3][0]).toEqual(expect.any(MutationState));
+    expect(observer.mock.calls[0][0]).toEqual(expect.any(AttributeMutation));
+    expect(observer.mock.calls[1][0]).toEqual(expect.any(AttributeMutation));
+    expect(observer.mock.calls[2][0]).toEqual(expect.any(AttributeMutation));
+    expect(observer.mock.calls[3][0]).toEqual(expect.any(AttributeMutation));
 
     observer.mockClear();
     observable.when(['presence']);
