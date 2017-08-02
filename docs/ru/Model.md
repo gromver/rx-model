@@ -7,13 +7,14 @@ Model - базовый класс для работы с данными.
 - [Сценарии](#scenarios)
 - [RxJs](#rxJs)
 - [ImmutableJs](#immutableJs)
+- [API](#api)
 
 ## <a name="bizlogic">Бизнес логика</a>
 Бизнес логика модели определяется ее структурой данных, правилами валидации и 
 правами доступа.
 
 ### rules()
-Метод возвращает объект вида { fieldPath: validationRule, ... } с описанием правил валидации 
+Метод возвращает объект вида `{ fieldPath: validationRule, ... }` с описанием правил валидации 
 полей модели, где:
 
 #### fieldPath
@@ -160,7 +161,7 @@ class MyModel extends Model {
 Права доступа определяются в методе rules() и применяются при установке значения либо его валидации.
 
 ## <a name="set">Установка значения</a>
-### set()
+### set(attribute, value, safe = true)
 Метод устанавливает значение **value** в поле модели по пути **attribute**
 ```js
 set(
@@ -276,3 +277,5 @@ class Model {
 ### Реакция на внешние изменения setContext()
 
 ## <a name="immutableJs">ImmutableJs</a>
+
+## <a name="api">API</a>
