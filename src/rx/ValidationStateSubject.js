@@ -38,59 +38,52 @@ export default class ValidationStateSubject extends Subject {
     }
 
     if (this.validFields.length) {
-      if (this.validFields.find((attribute) => {
-        const curState = this.model.getValidationState(attribute);
+      if (this.validFields.indexOf(state.attribute) === -1) return;
 
-        return !((curState instanceof SuccessState) || (curState instanceof WarningState));
-      })) return;
+      const curState = this.model.getValidationState(state.attribute);
+      if (!((curState instanceof SuccessState) || (curState instanceof WarningState))) return;
     }
 
     if (this.successFields.length) {
-      if (this.successFields.find((attribute) => {
-        const curState = this.model.getValidationState(attribute);
+      if (this.successFields.indexOf(state.attribute) === -1) return;
 
-        return !(curState instanceof SuccessState);
-      })) return;
+      const curState = this.model.getValidationState(state.attribute);
+      if (!(curState instanceof SuccessState)) return;
     }
 
     if (this.warningFields.length) {
-      if (this.warningFields.find((attribute) => {
-        const curState = this.model.getValidationState(attribute);
+      if (this.warningFields.indexOf(state.attribute) === -1) return;
 
-        return !(curState instanceof WarningState);
-      })) return;
+      const curState = this.model.getValidationState(state.attribute);
+      if (!(curState instanceof WarningState)) return;
     }
 
     if (this.pendingFields.length) {
-      if (this.pendingFields.find((attribute) => {
-        const curState = this.model.getValidationState(attribute);
+      if (this.pendingFields.indexOf(state.attribute) === -1) return;
 
-        return !(curState instanceof PendingState);
-      })) return;
+      const curState = this.model.getValidationState(state.attribute);
+      if (!(curState instanceof PendingState)) return;
     }
 
     if (this.pristineFields.length) {
-      if (this.pristineFields.find((attribute) => {
-          const curState = this.model.getValidationState(attribute);
+      if (this.pristineFields.indexOf(state.attribute) === -1) return;
 
-          return !(curState instanceof PristineState);
-        })) return;
+      const curState = this.model.getValidationState(state.attribute);
+      if (!(curState instanceof PristineState)) return;
     }
 
     if (this.errorFields.length) {
-      if (this.errorFields.find((attribute) => {
-        const curState = this.model.getValidationState(attribute);
+      if (this.errorFields.indexOf(state.attribute) === -1) return;
 
-        return !(curState instanceof ErrorState);
-      })) return;
+      const curState = this.model.getValidationState(state.attribute);
+      if (!(curState instanceof ErrorState)) return;
     }
 
     if (this.unvalidatedFields.length) {
-      if (this.unvalidatedFields.find((attribute) => {
-          const curState = this.model.getValidationState(attribute);
+      if (this.unvalidatedFields.indexOf(state.attribute) === -1) return;
 
-          return !(curState instanceof UnvalidatedState);
-        })) return;
+      const curState = this.model.getValidationState(state.attribute);
+      if (!(curState instanceof UnvalidatedState)) return;
     }
 
     super.next(state);
