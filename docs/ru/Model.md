@@ -6,7 +6,7 @@ Model - базовый класс для работы с данными.
 - [Валидация данных](#validate)
 - [Сценарии](#scenarios)
 - [RxJs](#rxJs)
-- [ImmutableJs](#immutableJs)
+- [Динамическое изменение бизнес логики](#invalidate)
 - [API](#api)
 
 ## <a name="bizlogic">Бизнес логика</a>
@@ -498,18 +498,171 @@ async function run() {
 run().then(() => console.log('end'));
 ```
   
-## <a name="rxJs">RxJs</a>
-Модель построена с использованием библиотеки RxJs, это позволяет контролировать изменения значений
+## <a name="rxJs">RxJs - реактивное поведение</a>
+Модель использует библиотеку [RxJs], это позволяет контролировать изменения значений
 полей, а так же статусов валидации в режиме реального времени и реагировать на них 
-при необходимости (например рассчитывать некоторые поля модели)
+при необходимости, например: производить рассчеты, рендеринг изменений на UI, 
+изменение бизнес логики модели. Есть 2 вида изменений на которые можно подписаться:
+- **getAttributeObservable()** - изменение значений полей модели
+- **getValidationObservable()** - изменение статусов валидации полей модели
 
-### Стримы getValidationObservable() и getAttributeObservable()
-TBD
-### Реакция на внутренние изменения invalidateWhen()
-TBD
-### Реакция на внешние изменения setContext()
-TBD
-## <a name="immutableJs">ImmutableJs</a>
-TBD
+### Изменение значений полей модели - getAttributeObservable()
+Метод возвращает объект типа AttributeMutationSubject, который является оберткой над Rx.Subject,
+предоставляя возможность подписываться на изменения конкретных полей.
+```js
+getAttributeObservable(): AttributeMutationSubject;
+```
+### Пример
+```js
+import { Model } from 'rx-model';
+import { SafeValidator } from 'rx-model/validators';
+
+class ExampleModel extends Model {
+  rules() {
+    return {
+      a: new SafeValidator(),
+      b: new SafeValidator(),
+      c: new SafeValidator(),
+    }
+  };
+}
+
+const model = new ExampleModel();
+
+// подписка на все изменения
+let observable = model.getAttributeObservable();
+let subscription = observable.subscribe(state => {
+  // state - объект AttributeMutation, он содержит путь измененного поля и его значение
+  console.log(state)
+});
+
+model.setAttributes({
+  a: 1,
+  b: 2,
+  c: 3
+});
+
+/*
+Выведет:
+AttributeMutation { attribute: 'a', value: 1 }
+AttributeMutation { attribute: 'b', value: 2 }
+AttributeMutation { attribute: 'c', value: 3 }
+ */
+
+subscription.unsubscribe();
+
+// подписка на изменения полей a и b
+observable = model.getAttributeObservable();
+subscription = observable.when(['a', 'b']).subscribe(state => console.log(state));
+
+model.setAttributes({
+  a: 1,
+  b: 2,
+  c: 3
+});
+
+/*
+Выведет:
+AttributeMutation { attribute: 'a', value: 1 }
+AttributeMutation { attribute: 'b', value: 2 }
+ */
+subscription.unsubscribe();
+```
+
+### Изменение статусов валидации полей модели - getValidationObservable()
+Метод возвращает объект типа ValidationStateSubject, который является оберткой над Rx.Subject,
+предоставляя возможность подписываться на изменения статусов валидации конкретных полей
+```js
+getValidationObservable(): ValidationStateSubject;
+```
+### Пример
+```js
+import { Model } from 'rx-model';
+import { EmailValidator, PresenceValidator } from 'rx-model/validators';
+
+class UserModel extends Model {
+  rules() {
+    return {
+      name: new PresenceValidator(),
+      email: [
+        new PresenceValidator(),
+        new EmailValidator()
+      ],
+    }
+  };
+}
+
+async function run() {
+  const model = new UserModel();
+
+  // подписка на все изменения статусов валидации
+  let observable = model.getValidationObservable();
+  let subscription = observable.subscribe(state => {
+    // state - объект SuccessState|WarningState|ErrorState|PendingState|UnvalidatedState,
+    // он содержит путь измененного поля, сообщение и статус
+    console.log(state)
+  });
+
+  await model.validate();
+
+  /*
+  Выведет:
+  ErrorState {
+    attribute: 'name',
+    message: Message {
+      message: '{attribute} - can\'t be blank',
+      bindings: { attribute: 'name' } },
+    status: 'error'
+  }
+  ErrorState {
+    attribute: 'email',
+    message: Message {
+     message: '{attribute} - can\'t be blank',
+     bindings: { attribute: 'email' } },
+    status: 'error'
+  }
+   */
+  subscription.unsubscribe();
+
+  // подписка на изменения поля name
+  observable = model.getValidationObservable();
+  subscription = observable.when(['name']).subscribe(state => console.log(state));
+
+  await model.validate();
+
+  /*
+  Выведет:
+  ErrorState {
+    attribute: 'name',
+    message:
+     Message {
+       message: '{attribute} - can\'t be blank',
+       bindings: { attribute: 'name' } },
+    status: 'error'
+  }
+   */
+  subscription.unsubscribe();
+}
+
+run().then(() => console.log('end'));
+```
+
+## <a name="invalidate">Динамическое изменение бизнес логики</a>
+Как правило, существует два варианта использования модели: на бэкенде и на фронтенде. 
+В первом случае, сервер получает окончательные данные и инструкцию (сценарий) как их обработать, 
+после чего остается только провалидировать полученные данные и в случае успеха выполнить
+необходимые действия. Во втором случае, пользователь должен заполнить модель данными, при этом 
+в процессе заполнения логика формы может изменятся. Как уже было описано ранее, логика модели
+орпеделяется в методе rules(), который в свою очередь кешируется, это сделано чтобы не нагружать
+UI рассчетом правил валидации при каждом изменении модели. Тем не менее, в сложных формах
+периодически требуется изменять бизнес логику модели, в зависимости от действий пользователя, 
+для этого есть 3 способа:
+- **invalidateValidators()** - очистка кеша по требованию
+- **invalidateWhen(): attributes** - наследуемый метод, должен вернуть список полей, при изменении 
+которых кеш будет автоматически очищаться
+- **setContext(context)** - очистка кеша при изменении контекста
+
 ## <a name="api">API</a>
 TBD
+
+[RxJs]: http://reactivex.io

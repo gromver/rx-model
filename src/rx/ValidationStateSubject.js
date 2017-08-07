@@ -33,10 +33,12 @@ export default class ValidationStateSubject extends Subject {
    * @param {SuccessState|WarningState|ErrorState|PendingState|UnvalidatedState} state
    */
   next(state) {
+    // console.log('next', state);
+
     if (this.changedFields.length) {
       if (this.changedFields.indexOf(state.attribute) === -1) return;
     }
-
+    // TODO refactor this and make mother fucking tests!
     if (this.validFields.length) {
       if (this.validFields.find((attribute) => {
         const curState = this.model.getValidationState(attribute);
@@ -46,11 +48,17 @@ export default class ValidationStateSubject extends Subject {
     }
 
     if (this.successFields.length) {
+      // console.log('whenSuccess', state, this.successFields.find((attribute) => {
+      //   const curState = this.model.getValidationState(attribute);
+      //
+      //   return !(curState instanceof SuccessState);
+      // }));
       if (this.successFields.find((attribute) => {
         const curState = this.model.getValidationState(attribute);
 
         return !(curState instanceof SuccessState);
       })) return;
+      console.log('whenSuccess out');
     }
 
     if (this.warningFields.length) {
