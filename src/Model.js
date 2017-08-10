@@ -6,7 +6,7 @@ import {
 } from './states';
 import ValidationTracker from './ValidationTracker';
 import Scenario from './Scenario';
-import { Message, Validator, MultiValidator } from './validators';
+import { Message, Validator, MultiValidator, PresenceValidator } from './validators';
 import ValidationStateSubject from './rx/ValidationStateSubject';
 import AttributeMutationSubject from './rx/AttributeMutationSubject';
 import utils from './utils';
@@ -325,6 +325,15 @@ export default class Model {
   }
 
   /**
+   * Returns a validator for the attribute
+   * @param attribute
+   * @returns {*}
+   */
+  getAttributeValidator(attribute) {
+    return this.getValidators()[attribute];
+  }
+
+  /**
    * Возвращает список доступных для редактирования полей
    * либо пустой список если нет ограничений
    * @returns {Array<string>}
@@ -637,6 +646,26 @@ export default class Model {
     return !!Object.values(this.validationState).find(state => state instanceof ErrorState);
   }
 
+  isAttributeHasValidator(attribute, validatorClass) {
+    function check(validator) {
+      if (!validator) return false;
+
+      if (validator instanceof validatorClass) return true;
+
+      if (validator instanceof MultiValidator) {
+        if (validator.validators.find((validator) => check(validator))) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    this.getAttributeValidator(attribute);
+
+    return check(this.getAttributeValidator(attribute));
+  }
+
   isModelChanged() {
     const { attributes, initialAttributes } = this;
 
@@ -659,6 +688,10 @@ export default class Model {
     return false;
   }
 
+  isAttributeRequired(attribute) {
+    return this.isAttributeHasValidator(attribute, PresenceValidator);
+  }
+
   /**
    * Validate model
    * @param {Array<string>|string} attributes
@@ -676,11 +709,9 @@ export default class Model {
     const jobs = [];
 
     attrsToCheck.forEach((attribute) => {
-      const validator = validators[attribute];
+      const validator = validators[attribute] || new Validator();
 
-      if (validator) {
-        jobs.push(this.validationTracker.validateAttribute(this, attribute, validator));
-      }
+      jobs.push(this.validationTracker.validateAttribute(this, attribute, validator));
     });
 
     return Promise.all(jobs).then((states) => {

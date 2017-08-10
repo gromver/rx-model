@@ -1,5 +1,5 @@
 import { SuccessState, PendingState, WarningState, ErrorState, PristineState, AttributeMutation } from '../states';
-import { MultiValidator, PresenceValidator, UrlValidator, CustomValidator } from '../validators';
+import { MultiValidator, PresenceValidator, UrlValidator, CustomValidator, NumberValidator } from '../validators';
 import { Map, List } from 'immutable';
 import ValidatorsModel from './models/ValidatorsModel';
 import RulesTestModel from './models/RulesTestModel';
@@ -355,5 +355,32 @@ describe('getFirstError life cycle', () => {
         ]
       }
     })
+  });
+
+  test('getAttributeValidator()', () => {
+    const model = new ValidatorsModel();
+
+    expect(model.getAttributeValidator('presence')).toEqual(expect.any(PresenceValidator));
+    expect(model.getAttributeValidator('url')).toEqual(expect.any(UrlValidator));
+  });
+
+  test('isAttributeHasValidator()', () => {
+    const model = new ValidatorsModel();
+
+    expect(model.isAttributeHasValidator('presence', PresenceValidator)).toBe(true);
+    expect(model.isAttributeHasValidator('presence', UrlValidator)).toBe(false);
+    expect(model.isAttributeHasValidator('multi', MultiValidator)).toBe(true);
+    expect(model.isAttributeHasValidator('multi', CustomValidator)).toBe(true);
+    expect(model.isAttributeHasValidator('multi', NumberValidator)).toBe(false);
+  });
+
+  test('isAttributeRequired()', () => {
+    const model = new ValidatorsModel();
+
+    expect(model.isAttributeRequired('presence')).toBe(true);
+    expect(model.isAttributeRequired('url')).toBe(false);
+    expect(model.isAttributeRequired('multi')).toBe(true);
+    expect(model.isAttributeRequired('notEditable')).toBe(false);
+    expect(model.isAttributeRequired('multiWithUnsafe')).toBe(false);
   });
 });

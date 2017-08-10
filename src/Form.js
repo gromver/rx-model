@@ -189,7 +189,7 @@ export default class Form extends Model {
    * @returns {Promise<boolean>}
    */
   validate(attributes = []) {
-    if (!attributes.length) {
+    if (Array.isArray(attributes) && !attributes.length) {
       // помечаем все безопасные аттрибуты как "грязные"
       Object.keys(this.getValidators()).forEach(attribute => this.markAsDirty(attribute));
     } else {
