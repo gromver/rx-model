@@ -39,7 +39,7 @@ export default class Form extends Model {
 
     this.validationSubscription = this.getValidationObservable().subscribe((state) => {
       if (state instanceof UnvalidatedState) {
-        return this.validateAttributes([state.attribute]);
+        setTimeout(() => this.validateAttributes([state.attribute]), 0);
       }
 
       return null;
