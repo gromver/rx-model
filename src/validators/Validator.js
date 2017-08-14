@@ -14,6 +14,10 @@ export default class Validator {
     return Promise.resolve();
   }
 
+  /**
+   * Is safe?
+   * @returns {boolean}
+   */
   isSafe() {
     return true;
   }

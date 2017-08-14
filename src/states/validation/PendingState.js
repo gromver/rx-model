@@ -1,9 +1,9 @@
 import State from './State';
 
 export default class PendingState extends State {
-  static LOADING_MESSAGE = 'Обработка';
+  static STATUS = undefined;
+  static LOADING_MESSAGE = 'Verification';
 
-  state = null;
   rejectFn = null;
 
   constructor(options, rejectFn) {
@@ -17,5 +17,10 @@ export default class PendingState extends State {
 
   abort() {
     this.rejectFn();
+  }
+
+
+  getStatus() {
+    return PendingState.STATUS;
   }
 }

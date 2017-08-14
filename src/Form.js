@@ -173,7 +173,7 @@ export default class Form extends Model {
   }
 
   isFormValid() {
-    return !this.hasErrors();
+    return !this.isModelHasErrors();
   }
 
   isFormChanged() {

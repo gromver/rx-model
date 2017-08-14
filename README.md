@@ -18,6 +18,8 @@ Model powered by RxJs and Immutable Js
 - UrlValidator
 - CompareValidator
 - CustomValidator
+- ObjectValidator
+- ArrayValidator
 - SafeValidator
 - UnsafeValidator
 

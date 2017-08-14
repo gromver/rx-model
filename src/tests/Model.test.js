@@ -1,9 +1,10 @@
 import { SuccessState, PendingState, WarningState, ErrorState, PristineState, AttributeMutation } from '../states';
 import { MultiValidator, PresenceValidator, UrlValidator, CustomValidator, NumberValidator } from '../validators';
-import { Map, List } from 'immutable';
+import { Map } from 'immutable';
 import ValidatorsModel from './models/ValidatorsModel';
 import RulesTestModel from './models/RulesTestModel';
 import NestedRulesModel from './models/NestedRulesModel';
+import ComplexDataModel from './models/ComplexDataModel';
 
 describe('Test Model.js', () => {
   const data = { presence: 'bar' };
@@ -382,5 +383,127 @@ describe('getFirstError life cycle', () => {
     expect(model.isAttributeRequired('multi')).toBe(true);
     expect(model.isAttributeRequired('notEditable')).toBe(false);
     expect(model.isAttributeRequired('multiWithUnsafe')).toBe(false);
+  });
+
+  test('ComplexDataModel validate test 1', async () => {
+    const model = new ComplexDataModel();
+    const observer = jest.fn();
+
+    model.getValidationObservable().subscribe(observer);
+
+    model.setAttributes({
+      simple: '123',
+      object: [],
+      array: {}
+    });
+
+    const isValid = await model.validate();
+
+    expect(isValid).toBe(false);
+
+    expect(observer).toHaveBeenCalledTimes(3);
+    expect(observer.mock.calls[0][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[1][0]).toEqual(expect.any(ErrorState));
+    expect(observer.mock.calls[2][0]).toEqual(expect.any(ErrorState));
+
+    expect(model.getValidationState('object')).toEqual(expect.any(ErrorState));
+    expect(model.getValidationState('array')).toEqual(expect.any(ErrorState));
+  });
+
+  test('ComplexDataModel validate test 2', async () => {
+    const model = new ComplexDataModel();
+    const observer = jest.fn();
+
+    model.getValidationObservable().subscribe(observer);
+
+    model.setAttributes({
+      simple: '123',
+      object: {},
+      array: []
+    });
+
+    const isValid = await model.validate();
+
+    expect(isValid).toBe(false);
+
+    expect(observer).toHaveBeenCalledTimes(5);
+    expect(observer.mock.calls[0][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[1][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[2][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[3][0]).toEqual(expect.any(ErrorState));
+    expect(observer.mock.calls[4][0]).toEqual(expect.any(ErrorState));
+
+    expect(model.getValidationState('object.a')).toEqual(expect.any(ErrorState));
+    expect(model.getValidationState('object.b')).toEqual(expect.any(ErrorState));
+  });
+
+  test('ComplexDataModel validate test 3', async () => {
+    const model = new ComplexDataModel();
+    const observer = jest.fn();
+
+    model.getValidationObservable().subscribe(observer);
+
+    model.setAttributes({
+      simple: '123',
+      object: {
+        a: '123',
+        b: '123',
+      },
+      array: [
+        {}
+      ]
+    });
+
+    const isValid = await model.validate();
+
+    expect(isValid).toBe(false);
+
+    expect(observer).toHaveBeenCalledTimes(8);
+    expect(observer.mock.calls[0][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[1][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[2][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[3][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[4][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[5][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[6][0]).toEqual(expect.any(ErrorState));
+    expect(observer.mock.calls[7][0]).toEqual(expect.any(ErrorState));
+
+    expect(model.getValidationState('array[0].a')).toEqual(expect.any(ErrorState));
+    expect(model.getValidationState('array[0].b')).toEqual(expect.any(ErrorState));
+  });
+
+  test('ComplexDataModel validate test 4', async () => {
+    const model = new ComplexDataModel();
+    const observer = jest.fn();
+
+    model.getValidationObservable().subscribe(observer);
+
+    model.setAttributes({
+      simple: '123',
+      object: {
+        a: '123',
+        b: '123',
+      },
+      array: [
+        {
+          a: '123',
+          b: '123',
+        },
+      ]
+    });
+
+    const isValid = await model.validate();
+
+    expect(isValid).toBe(true);
+
+    expect(observer).toHaveBeenCalledTimes(8);
+    expect(observer.mock.calls[0][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[1][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[2][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[3][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[4][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[5][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[6][0]).toEqual(expect.any(SuccessState));
+    expect(observer.mock.calls[7][0]).toEqual(expect.any(SuccessState));
   });
 });

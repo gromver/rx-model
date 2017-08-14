@@ -12,6 +12,8 @@ import RangeValidator from './RangeValidator';
 import CompareValidator from './CompareValidator';
 import DateValidator from './DateValidator';
 import UrlValidator from './UrlValidator';
+import ObjectValidator from './ObjectValidator';
+import ArrayValidator from './ArrayValidator';
 
 const SafeValidator = Validator;
 
@@ -30,4 +32,6 @@ export {
   CompareValidator,
   DateValidator,
   UrlValidator,
+  ObjectValidator,
+  ArrayValidator,
 };
