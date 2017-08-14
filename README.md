@@ -35,6 +35,9 @@ Model powered by RxJs and Immutable Js
 - RxJs трекинг состояния модели (изменение значений и статуса валидации полей)
 - Не зависит от окружения, библиотека применима как для фронтенда (реактивные формы) так и бэкенда
 
+## Demo
+[https://gromver.github.io/rx-model](https://gromver.github.io/rx-model)
+
 ## Документация
 Документация доступна на русском языке [здесь](docs/ru/index.md).
 
