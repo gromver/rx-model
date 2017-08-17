@@ -1,5 +1,5 @@
 # rx-model
-Model powered by RxJs and Immutable Js
+Model powered by RxJs
 
 Библиотека для создания валидируемых моделей, форм и валидаторов. 
 
@@ -478,8 +478,9 @@ class UserFormComponent extends React.Component {
 }
 ```
 
-## Ссылки
-- [Discord] чат
+## Links
+- [Demo]
+- [Documentation]
 
 ## License
 rx-model is released under the MIT license.
@@ -489,3 +490,5 @@ See the [LICENSE file] for license text and copyright information.
 [Wiki]: https://github.com/gromver/rx-model/wiki
 [FormConnect]: https://github.com/gromver/react-rx-form
 [Discord]: https://discord.gg/MAAqSJ
+[Demo]: https://gromver.github.io/rx-model
+[Documentation]: https://github.com/gromver/rx-model/blob/master/docs/ru/index.md
