@@ -83,6 +83,7 @@ export default class Model {
    */
   constructor(data = {}, context = {}, scenario = Model.SCENARIO_DEFAULT) {
     this.context = context;
+    this.currentScenarios = typeof scenario === 'string' ? [scenario] : scenario;
 
     const map = fromJS(this.prepareSourceData(data));
 
@@ -94,7 +95,137 @@ export default class Model {
     this.validationState = {};
     this.validationTracker = new ValidationTracker(this.onValidationStateChange);
 
-    this.setScenario(scenario);
+    this.startSession();
+  }
+
+  /**
+   * Extendable methods
+   */
+
+  /**
+   * Get validation rules
+   * @returns {{}}
+   */
+  rules() {
+    return {};
+  }
+
+  /**
+   * Get model's scenarios
+   * ключ сценарий => значение [ ...список аттрибутов валидируемых для этого сценария ]
+   * если по ключу нет сценария то все аттрибуты валидируются если нет спец условий
+   * (Scenario.in(...), Scenario.except(...))
+   * @returns {{}}
+   */
+  scenarios() {
+    return {};
+  }
+
+  /**
+   * Invalidate rules cases
+   * Если возвращает объект:
+   * ключ сценарий => значение [ ...список аттрибутов, изменение которых приводит к изменению правил валидации ]
+   * Усли возвращает массив
+   * [ ...список аттрибутов, изменение которых приводит к изменению правил валидации не зависимо от сценария ]
+   * @returns {{}|[]}
+   */
+  invalidateWhen() {
+    return [];
+  }
+
+  /**
+   * Prepare model's initialAttributes, used by constructor()
+   * Note! Returned object must be a plane Object or an instance of Immutable.Map
+   * @param data
+   * @returns {{}|Immutable.Map}
+   */
+  prepareSourceData(data) {
+    return {
+      ...data,
+    };
+  }
+
+  /**
+   * Prepare model's attributes, used by getAttributes()
+   * @param data
+   * @returns {{}}
+   */
+  prepareResultData(data) {
+    return data;
+  }
+
+  /**
+   * Prepare custom model's logic
+   * @param {Subject} onCleanup Subscribe to this subject for any cleanup work if needed
+   */
+  prepare(onCleanup) {
+    // some custom logic here
+    // ...
+    // onCleanup.subscribe(() => {
+    //   // cleanup here
+    // });
+  }
+
+  /**
+   * Session
+   */
+  cleanupSession;
+
+  startSession() {
+    if (this.cleanupSession) {
+      this.cleanupSession.next();
+
+      this.cleanupSession.unsubscribe();
+    }
+
+    this.cleanupSession = new Subject();
+
+    this.prepare(this.cleanupSession);
+
+    if (this.iwSubscription) {
+      this.iwSubscription.unsubscribe();
+
+      this.iwSubscription = null;
+    }
+
+    const invalidateWhen = this.normalizeInvalidateWhen();
+
+    if (invalidateWhen.length) {
+      this.iwSubscription = this.getAttributeObservable().when(invalidateWhen).subscribe(() => {
+        this.invalidateValidators();
+      });
+    }
+  }
+
+  normalizeInvalidateWhen() {
+    const attributes = this.invalidateWhen();
+
+    if (Array.isArray(attributes)) {
+      return attributes;
+    } else {
+      let normalized = [];
+
+      Object.entries(attributes).forEach(([scenario, attributes]) => {
+        if (this.isScenario(scenario)) {
+          normalized = [...normalized, ...attributes];
+        }
+      });
+
+      return [...new Set(normalized)];
+    }
+  }
+
+  /**
+   * Invalidate validators
+   */
+  invalidateValidators() {
+    Object.keys(this.validationState).forEach(attribute => {
+      this.onValidationStateChange(new UnvalidatedState({
+        attribute
+      }))
+    });
+
+    this.validators = undefined;
   }
 
   /**
@@ -118,7 +249,7 @@ export default class Model {
   }
 
   /**
-   * Save validation state changes and pipe them to the validationObservable
+   * Save validation state changes and forward them to the validationObservable
    * @param state
    */
   onValidationStateChange(state) {
@@ -161,64 +292,6 @@ export default class Model {
   }
 
   /**
-   * EXTEND THIS
-   * get validation rules
-   * @returns {{}}
-   */
-  rules() {
-    return {};
-  }
-
-  /**
-   * EXTEND THIS
-   * get model's scenarios
-   * ключ сценарий => значение [ ...список аттрибутов валидируемых для этого сценария ]
-   * если по ключу нет сценария то все аттрибуты валидируются если нет спец условий
-   * (Scenario.in(...), Scenario.except(...))
-   * @returns {{}}
-   */
-  scenarios() {
-    return {};
-  }
-
-  /**
-   * EXTEND THIS
-   * invalidate rules cases
-   * Если возвращает объект:
-   * ключ сценарий => значение [ ...список аттрибутов, изменение которых приводит к изменению правил валидации ]
-   * Усли возвращает массив
-   * [ ...список аттрибутов, изменение которых приводит к изменению правил валидации не зависимо от сценария ]
-   * @returns {{}|[]}
-   */
-  invalidateWhen() {
-    return [];
-  }
-
-  /**
-   * EXTEND THIS
-   * инициализация и подготовка модели с которой будет работать форма
-   * Важно! возвращаемый объект должен быть простым -
-   * то есть без наследования либо объектом Immutable.Map
-   * @param data
-   * @returns {{}}
-   */
-  prepareSourceData(data) {
-    return {
-      ...data,
-    };
-  }
-
-  /**
-   * EXTEND THIS
-   * подготовка модели во время вызова getAttributes()
-   * @param data
-   * @returns {{}}
-   */
-  prepareResultData(data) {
-    return data;
-  }
-
-  /**
    * Context
    */
 
@@ -228,6 +301,8 @@ export default class Model {
    */
   setContext(context) {
     this.context = context;
+
+    this.startSession();
 
     this.invalidateValidators();
   }
@@ -250,6 +325,8 @@ export default class Model {
    */
   setScenario(scenario) {
     this.currentScenarios = typeof scenario === 'string' ? [scenario] : scenario;
+
+    this.startSession();
 
     this.invalidateValidators();
   }
@@ -321,20 +398,6 @@ export default class Model {
    */
   setValidators(rules) {
     this.validators = rules;
-
-    if (this.iwSubscription) {
-      this.iwSubscription.unsubscribe();
-
-      this.iwSubscription = null;
-    }
-
-    const invalidateWhen = this.normalizeInvalidateWhen();
-
-    if (invalidateWhen.length) {
-      this.iwSubscription = this.getAttributeObservable().when(invalidateWhen).subscribe(() => {
-        this.invalidateValidators();
-      });
-    }
   }
 
   /**
@@ -414,37 +477,6 @@ export default class Model {
     } else {
       throw new Error('rules - unknown validator description');
     }
-  }
-
-  normalizeInvalidateWhen() {
-    const attributes = this.invalidateWhen();
-
-    if (Array.isArray(attributes)) {
-      return attributes;
-    } else {
-      let normalized = [];
-
-      Object.entries(attributes).forEach(([scenario, attributes]) => {
-        if (this.isScenario(scenario)) {
-          normalized = [...normalized, ...attributes];
-        }
-      });
-
-      return [...new Set(normalized)];
-    }
-  }
-
-  /**
-   * Invalidate validators
-   */
-  invalidateValidators() {
-    Object.keys(this.validationState).forEach(attribute => {
-      this.onValidationStateChange(new UnvalidatedState({
-        attribute
-      }))
-    });
-
-    this.validators = undefined;
   }
 
   /**

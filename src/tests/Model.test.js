@@ -5,6 +5,7 @@ import ValidatorsModel from './models/ValidatorsModel';
 import RulesTestModel from './models/RulesTestModel';
 import NestedRulesModel from './models/NestedRulesModel';
 import ComplexDataModel from './models/ComplexDataModel';
+import SessionFlowModel from './models/SessionFlowModel';
 
 describe('Test Model.js', () => {
   const data = { presence: 'bar' };
@@ -505,5 +506,31 @@ describe('getFirstError life cycle', () => {
     expect(observer.mock.calls[5][0]).toEqual(expect.any(SuccessState));
     expect(observer.mock.calls[6][0]).toEqual(expect.any(SuccessState));
     expect(observer.mock.calls[7][0]).toEqual(expect.any(SuccessState));
+  });
+
+  test('startSession flow', async () => {
+    const observer = jest.fn();
+    const fn = jest.fn();
+
+    const model = new SessionFlowModel({}, {
+      fn
+    });
+
+    model.cleanupSession.subscribe(observer);
+
+    model.setScenario(ComplexDataModel.SCENARIO_DEFAULT);
+    expect(observer).toHaveBeenCalledTimes(1);
+
+    observer.mockClear();
+    model.cleanupSession.subscribe(observer);
+
+    model.setContext({});
+    expect(observer).toHaveBeenCalledTimes(1);
+
+    expect(fn).toHaveBeenCalledTimes(4);
+    expect(fn.mock.calls[0][0]).toBe('prepare');
+    expect(fn.mock.calls[1][0]).toBe('cleanup');
+    expect(fn.mock.calls[2][0]).toBe('prepare');
+    expect(fn.mock.calls[3][0]).toBe('cleanup');
   });
 });
