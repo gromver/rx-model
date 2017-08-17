@@ -22,11 +22,13 @@ export default class StateMutationSubject extends Subject {
   }
 
   subscribe(observer) {
-    super.subscribe(observer);
+    const subscription = super.subscribe(observer);
 
     if (this.isRunOnSubscribe) {
       super.next({});
     }
+
+    return subscription;
   }
 
   /**
