@@ -1,6 +1,6 @@
 {
   "name": "rx-model",
-  "version": "1.4.7",
+  "version": "1.4.8",
   "description": "Model powered by RxJs",
   "main": "index.js",
   "scripts": {
