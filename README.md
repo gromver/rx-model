@@ -1,9 +1,14 @@
 # rx-model
 Model powered by RxJs
 
-Библиотека для создания валидируемых моделей, форм и валидаторов. 
+Библиотека для создания валидируемых моделей, форм и валидаторов.
 
-## Обзор
+## Install
+```
+npm install rx-model --save
+```
+
+## Overview
 Библиотека представляет из себя 3 основных класса:
 - Model - базовый класс для работы с данными, применим на стороне сервера
 - Form - унаследован от Model, предназначен для создания форм на клиенте
@@ -23,7 +28,7 @@ Model powered by RxJs
 - SafeValidator
 - UnsafeValidator
 
-## Возможности
+## Features
 - Описание структуры данных любой вложенности
 - Контроль доступа к полям модели
 - Простое и управляемое валидирование данных
@@ -38,11 +43,12 @@ Model powered by RxJs
 ## Demo
 [https://gromver.github.io/rx-model](https://gromver.github.io/rx-model)
 
-## Документация
-Документация доступна на русском языке [здесь](docs/ru/index.md).
+## Documentation
+- [Russian](docs/ru/index.md)
 
-## Model
-Model - базовый класс для работы с данными, с его помощью можно описать структуру данных и правила валидации.
+## Usage
+### Backend environment
+Model - базовый класс для работы с данными, описывает структуру данных и правила валидации.
 ```javascript
 import { Model } from 'rx-model';
 import { PresenceValidator, EmailValidator, StringValidator, NumberValidator, SafeValidator } from 'rx-model/validators';
@@ -87,7 +93,7 @@ class UserModel extends Model {
  * @param data
  * @returns {Promise} возвращает промис с объектом пользователя (resolve) либо текст первой ошибки (reject)
  */
-async function createUser(data) {
+function createUser(data) {
   const model = new UserModel();
 
   /**
@@ -138,132 +144,14 @@ function updateUser(user, data) {
     }
   });
 }
-
-async function run() {
-  // Создадим пользователя, и добавим поля не имеющие к нему никакого отношения
-  let user = await createUser({
-    name: 'John',
-    email: 'john@mail.com',
-    password: '123456',
-    profile: {
-      age: 20,
-      phone: '7999999999',
-      unknownProfileField1: 'upf1', // не безопасные данные
-    },
-    unknownField1: 'uf1', // не безопасные данные
-    unknownField2: 'uf2', // не безопасные данные
-  });
-
-  console.log(user);
-  // {
-  //   name: 'John',
-  //   email: 'john@mail.com',
-  //   password: '123456',
-  //   profile: {
-  //     age: 20,
-  //     phone: '7999999999'
-  //   }
-  // }
-
-  // Обновим пользователя
-  user = await updateUser(user, {
-    name: 'Johny',
-    profile: {
-      age: 25,
-      phone: '7555555555',
-    },
-  });
-
-  console.log(user);
-  // {
-  //   name: 'Johny',
-  //   email: 'john@mail.com',
-  //   password: '123456',
-  //   profile: {
-  //     age: 25,
-  //     phone: '7555555555'
-  //   }
-  // }
-
-  // Обновим пользователя, с не валидными значениями
-  try {
-    user = await updateUser(user, {
-      email: 'invalid mail',
-      password: '111',
-      profile: {
-        age: 0,
-        phone: '7555555555',
-      },
-    });
-  } catch (error) {
-    console.log(error); // email - is not a valid email
-  }
-
-  // Обновим пользователя, с не валидными значениями
-  try {
-    user = await updateUser(user, {
-      email: 'johny@mail.com',
-      password: '111',
-      profile: {
-        age: 0,
-        phone: '7555555555',
-      },
-    });
-  } catch (error) {
-    console.log(error); // password - is too short (minimum is 6 characters)
-  }
-
-  // Обновим пользователя, с не валидными значениями
-  try {
-    user = await updateUser(user, {
-      email: 'johny@mail.com',
-      password: '111111',
-      profile: {
-        age: 0,
-        phone: '7555555555',
-      },
-    });
-  } catch (error) {
-    console.log(error); // profile.age - must be greater than 0
-  }
-
-  // Исправим все ошибки и обновим пользователя
-  try {
-    user = await updateUser(user, {
-      email: 'johny@mail.com',
-      password: '111111',
-      profile: {
-        age: 30,
-        phone: '7555555555',
-      },
-    });
-
-    console.log(user);
-    // {
-    //   name: 'Johny',
-    //   email: 'johny@mail.com',
-    //   password: '111111',
-    //   profile: {
-    //     age: 30,
-    //     phone: '7555555555'
-    //   }
-    // }
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-run().then(() => console.log('end'));
 ```
-> Этот пример, не раскрывает всех возможностей библиотеки. Подробнее о библиотеке будет описано в документации. 
 
-## Form
-Form - базовый класс для создания форм на клиенте.
-Form расширяет Model, довабляя специфический для фронта функционал.
-
-#### Пример
-Опишем форму и создадим react компонент отображающий форму. Для связи компонента с формой
-воспользуемся специальным компонентом [FormConnect]
+### Client side
+Для создания форм на клиенте предусмотрен класс Form. Этот класс расширяет Model, довабляя 
+специфический для фронта функционал. Отображать UI формы будем с помощью [ReactJS], 
+для связки с Form объектом воспользуемся специальным react компонентом [FormConnect].
+Суть компонента FormConnect - подписка на интересующие изменения формы 
+(поля формы, состояния валидации, стейт формы) и отрисовка элемента формы.
 ```jsx harmony
 import React from 'react';
 import { Form } from 'rx-model';
@@ -492,3 +380,4 @@ See the [LICENSE file] for license text and copyright information.
 [Discord]: https://discord.gg/MAAqSJ
 [Demo]: https://gromver.github.io/rx-model
 [Documentation]: https://github.com/gromver/rx-model/blob/master/docs/ru/index.md
+[ReactJS]: https://facebook.github.io/react/
