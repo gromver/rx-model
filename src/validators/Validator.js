@@ -15,7 +15,7 @@ export default class Validator {
   }
 
   /**
-   * Is safe?
+   * Is the validator safe?
    * @returns {boolean}
    */
   isSafe() {
@@ -36,12 +36,12 @@ export default class Validator {
   __getTrueValue;
   __isCached = true;
 
-    // behavior modifiers
-    /**
-     * Enable/disable caching
-     * @param bool
-     * @returns {Validator}
-     */
+  // behavior modifiers
+  /**
+   * Enable/disable caching
+   * @param bool
+   * @returns {Validator}
+   */
   cache(bool) {
     this.__isCached = bool;
 
@@ -58,7 +58,7 @@ export default class Validator {
     return this;
   }
 
-    // valueObject interface implementation
+  // valueObject interface implementation
   equals(other) {
     if (this.hashCode() === other.hashCode()) {
       const isCached = this.__isCached && other.__isCached,
@@ -80,9 +80,9 @@ export default class Validator {
           isThrottled = false;
         }, duration);
 
-        return true;
+        return false;
       }
-      return false;
+      return true;
     };
   }
 
