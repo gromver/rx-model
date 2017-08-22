@@ -21,6 +21,8 @@ export default class MultiValidator extends Validator {
   }
 
   validate(value, attribute, model) {
+    if (!this.validators.length) return Promise.resolve();
+
     const jobs = this.validators.map(validator => validator.validate(value, attribute, model));
 
     return this.isAny
