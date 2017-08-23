@@ -2,13 +2,10 @@ import { is } from 'immutable';
 import { PendingState, SuccessState, WarningState, ErrorState } from './states';
 
 /**
- * Хелпер для валидации атрибутов модели, запускает процес валидации аттрибута модели,
- * если валидатор асинхронный то устанавливается PendingState, после окончания валидации,
- * устанавливается соответсующий стейт {ErrorState, SuccessState, WarningState}
- * Если валидируется аттрибут который в данный момент все еще валидируется предыдущим вызовом -
- * предыдущая валидация отменяется
- * Если у атрибута его значение и результат валидации не менялись с последнего вызова -
- * возвращается закешированный результат валидации
+ * ValidationTracker validates models's attribute and caches last state of validation for each
+ * processed attribute. ValidationTracker re-uses cached states when both conditions are passed:
+ * 1. Attribute's values are not changed
+ * 2. Attribute's validators are not changed (see Validator.is())
  */
 export default class ValidationTracker {
   constructor(onPushState) {
@@ -20,6 +17,14 @@ export default class ValidationTracker {
 
   onPushState;
 
+  /**
+   * Validate model's attribute. If at the moment of validation previous validation process
+   * for the same attribute is not finished (PendingState), that process is skipped.
+   * @param {Model} model
+   * @param {string} attribute
+   * @param {Validator} validator
+   * @returns {Promise<State>}
+   */
   validateAttribute(model, attribute, validator) {
     const cached = this.getAttributeCache(attribute);
     const value = model.get(attribute);
@@ -95,6 +100,10 @@ export default class ValidationTracker {
     return Promise.resolve(cachedState);
   }
 
+  /**
+   * Push new validation state
+   * @param {State} changes
+   */
   pushState(changes) {
     this.onPushState && this.onPushState(changes);
   }

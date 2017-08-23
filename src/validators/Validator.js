@@ -2,14 +2,33 @@ import Message from './Message';
 import { Map } from 'immutable';
 
 export default class Validator {
+  /**
+   * Message instance creator
+   * @param {string} message
+   * @param {{}} bindings
+   * @returns {Message}
+   */
   static createMessage(message, bindings) {
     return new Message(message, bindings);
   }
 
+  /**
+   * Validator.createMessage wrapper for using in object context
+   * @param {string} message
+   * @param {{}} bindings
+   * @returns {Message}
+   */
   createMessage(message, bindings) {
     return Validator.createMessage(message, bindings);
   }
 
+  /**
+   * Validate the value
+   * @param {*} value
+   * @param {string} attribute
+   * @param {Model} model
+   * @returns {Promise.<T>}
+   */
   validate(value, attribute, model) {
     return Promise.resolve();
   }
@@ -22,6 +41,12 @@ export default class Validator {
     return true;
   }
 
+  /**
+   * Compare validators
+   * @param {Validator} a
+   * @param {Validator} b
+   * @returns {boolean}
+   */
   static is(a, b) {
     if (a === b) return true;
 
@@ -48,6 +73,11 @@ export default class Validator {
     return this;
   }
 
+  /**
+   * Ignore disabled cache behavior in milliseconds period
+   * @param milliseconds
+   * @returns {Validator}
+   */
   duration(milliseconds) {
     if (milliseconds) {
       this.__getTrueValue = this.throttledTrueValue(milliseconds);
@@ -86,6 +116,10 @@ export default class Validator {
     };
   }
 
+  /**
+   * Generate hash code for the validator comparing
+   * @returns {*}
+   */
   hashCode() {
     if (this.__hash) {
       return this.__hash;
