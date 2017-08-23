@@ -1,5 +1,5 @@
 import { SuccessState, PendingState, WarningState, ErrorState, UnvalidatedState, PristineState } from '../states';
-import ValidatorsModel from './models/ValidatorsModel';
+import ValidatorsModel from './__models/ValidatorsModel';
 
 describe('Test ValidationStateSubject.js', () => {
   test('when()', async () => {

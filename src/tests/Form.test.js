@@ -1,4 +1,4 @@
-import TestForm from './forms/TestForm';
+import TestForm from './__forms/TestForm';
 
 describe('Test Form.js', () => {
   test('construct()', () => {

@@ -1,11 +1,11 @@
 import { SuccessState, PendingState, WarningState, ErrorState, PristineState, AttributeMutation } from '../states';
 import { MultiValidator, PresenceValidator, UrlValidator, CustomValidator, NumberValidator } from '../validators';
 import { Map } from 'immutable';
-import ValidatorsModel from './models/ValidatorsModel';
-import RulesTestModel from './models/RulesTestModel';
-import NestedRulesModel from './models/NestedRulesModel';
-import ComplexDataModel from './models/ComplexDataModel';
-import SessionFlowModel from './models/SessionFlowModel';
+import ValidatorsModel from './__models/ValidatorsModel';
+import RulesTestModel from './__models/RulesTestModel';
+import NestedRulesModel from './__models/NestedRulesModel';
+import ComplexDataModel from './__models/ComplexDataModel';
+import SessionFlowModel from './__models/SessionFlowModel';
 
 describe('Test Model.js', () => {
   const data = { presence: 'bar' };
