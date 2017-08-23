@@ -16,7 +16,7 @@ export default class Scenario {
 
   /**
    * Rule description
-   * @type {Validator|function|boolean}
+   * @type {Validator|function|array|boolean}
    */
   validator;
 
@@ -24,7 +24,7 @@ export default class Scenario {
    *
    * @param {string} apply - one of 'IN' or 'EXCEPT'
    * @param {Array<string>} scenarios
-   * @param {Validator|function|boolean} validator - rule description (see Model.rules)
+   * @param {Validator|function|array|boolean} validator - rule description (see Model.rules)
    */
   constructor(apply, scenarios, validator) {
     if (!(apply === Scenario.APPLY_EXCEPT || apply === Scenario.APPLY_IN)) {
@@ -35,10 +35,6 @@ export default class Scenario {
       throw new Error('Scenario::constructor scenarios property must be an array');
     }
 
-    if (!validator) {
-      throw new Error('Scenario::constructor validator property must be set');
-    }
-
     this.apply = apply;
     this.scenarios = scenarios;
     this.validator = validator;
@@ -47,7 +43,7 @@ export default class Scenario {
   /**
    * Fast creating of a Scenario instance with the Scenario.APPLY_IN behavior
    * @param {Array<string>} scenarios
-   * @param {Validator|function|boolean} validator - rule description (see Model.rules)
+   * @param {Validator|function|array|boolean} validator - rule description (see Model.rules)
    * @returns {Scenario}
    */
   static in(scenarios, validator) {
@@ -57,7 +53,7 @@ export default class Scenario {
   /**
    * Fast creating of a Scenario instance with the Scenario.APPLY_EXCEPT behavior
    * @param {Array<string>} scenarios
-   * @param {Validator|function|boolean} validator - rule description (see Model.rules)
+   * @param {Validator|function|array|boolean} validator - rule description (see Model.rules)
    * @returns {Scenario}
    */
   static except(scenarios, validator) {
