@@ -30,7 +30,7 @@ export default class DateValidator extends Validator {
     this.minDate = minDate;
   }
 
-  validate(value, attribute) {
+  validate(value, attribute, model) {
     // Undefined values are fine
     if (!utils.isDefined(value)) {
       return Promise.resolve();

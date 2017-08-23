@@ -47,4 +47,3 @@ export default class CompareValidator extends Validator {
     return Promise.resolve();
   }
 }
-

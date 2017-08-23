@@ -60,7 +60,7 @@ export default class NumberValidator extends Validator {
     this.even = even;
   }
 
-  validate(value, attribute) {
+  validate(value, attribute, model) {
     // Empty values are fine
     if (!utils.isDefined(value) || utils.isEmpty(value)) {
       return Promise.resolve();

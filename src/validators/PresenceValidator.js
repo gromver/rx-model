@@ -11,7 +11,7 @@ export default class PresenceValidator extends Validator {
     this.allowEmpty = allowEmpty;
   }
 
-  validate(value, attribute) {
+  validate(value, attribute, model) {
     if (this.allowEmpty ? !utils.isDefined(value) : utils.isEmpty(value)) {
       return Promise.reject(this.createMessage(this.message || PresenceValidator.MESSAGE, {
         attribute,

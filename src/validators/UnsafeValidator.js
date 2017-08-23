@@ -5,4 +5,3 @@ export default class UnsafeValidator extends Validator {
     return false;
   }
 }
-

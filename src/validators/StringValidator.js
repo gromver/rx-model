@@ -29,7 +29,7 @@ export default class StringValidator extends Validator {
     this.flags = flags;
   }
 
-  validate(value, attribute) {
+  validate(value, attribute, model) {
     // Empty values are fine
     if (!utils.isDefined(value) || utils.isEmpty(value)) {
       return Promise.resolve();
@@ -76,4 +76,3 @@ export default class StringValidator extends Validator {
     return Promise.resolve();
   }
 }
-

@@ -23,7 +23,7 @@ export default class RangeValidator extends Validator {
     this.exceptRange = exceptRange;
   }
 
-  validate(value, attribute) {
+  validate(value, attribute, model) {
     // Empty values are fine
     if (!utils.isDefined(value) || utils.isEmpty(value)) {
       return Promise.resolve();

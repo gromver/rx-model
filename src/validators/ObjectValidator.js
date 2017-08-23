@@ -4,7 +4,7 @@ import utils from '../utils';
 export default class ObjectValidator extends Validator {
   static MESSAGE = '{attribute} - must be an object';
 
-  validate(value, attribute) {
+  validate(value, attribute, model) {
     // Undefined values are fine
     if (value === undefined) {
       return Promise.resolve();

@@ -11,7 +11,7 @@ export default class EmailValidator extends Validator {
     this.message = message;
   }
 
-  validate(value, attribute) {
+  validate(value, attribute, model) {
     const message = this.createMessage(this.message || EmailValidator.MESSAGE, {
       attribute,
     });

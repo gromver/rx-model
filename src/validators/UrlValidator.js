@@ -83,4 +83,3 @@ export default class UrlValidator extends Validator {
     return Promise.resolve();
   }
 }
-

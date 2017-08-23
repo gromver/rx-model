@@ -40,4 +40,3 @@ export default class MultiValidator extends Validator {
     return false;
   }
 }
-

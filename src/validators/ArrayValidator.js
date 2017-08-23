@@ -22,7 +22,7 @@ export default class ArrayValidator extends Validator {
     this.minLength = minLength;
   }
 
-  validate(value, attribute) {
+  validate(value, attribute, model) {
     // Undefined values are fine
     if (value === undefined) {
       return Promise.resolve();
@@ -53,4 +53,3 @@ export default class ArrayValidator extends Validator {
     return Promise.resolve();
   }
 }
-
