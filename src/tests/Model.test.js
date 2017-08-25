@@ -356,8 +356,25 @@ describe('getFirstError life cycle', () => {
           }
         ]
       }
-    })
+    });
   });
+
+  test('Test set() - undefined value', () => {
+    const model = new NestedRulesModel();
+
+    model.set('root', {});
+
+    expect(model.getAttributes()).toEqual({
+      root: {}
+    });
+
+    model.set('root', undefined);
+
+    expect(model.getAttributes()).toEqual({
+      root: undefined
+    });
+  });
+
 
   test('getAttributeValidator()', () => {
     const model = new ValidatorsModel();

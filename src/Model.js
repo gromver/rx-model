@@ -503,7 +503,7 @@ export default class Model {
       } else {
         this.attributes = this.attributes.setIn(utils.resolveAttribute(attribute), value);
       }
-    } else if (value.constructor === Object) {
+    } else if (value && (value.constructor === Object)) {
       // lookup
       const hasRules = this.lookupObjectRules(attribute);
 
