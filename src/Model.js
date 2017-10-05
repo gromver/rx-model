@@ -219,10 +219,12 @@ export default class Model {
    * Invalidate validators
    */
   invalidateValidators() {
-    Object.keys(this.validationState).forEach(attribute => {
-      this.onValidationStateChange(new UnvalidatedState({
-        attribute
-      }))
+    Object.entries(this.validationState).forEach(([attribute, state]) => {
+      if (!(state instanceof PristineState)) {
+        this.onValidationStateChange(new UnvalidatedState({
+          attribute
+        }));
+      }
     });
 
     this.validators = undefined;
@@ -430,6 +432,7 @@ export default class Model {
   }
 
   normalizeRules() {
+    // todo throw warning with a list of attributes which needs to be filed with rules
     const rules = {};
 
     const accessibleAttributes = this.getAccessibleAttributes();
@@ -525,7 +528,7 @@ export default class Model {
   }
 
   /**
-   * Transforms the attribute path to the rule format path
+   * Transforms the attribute's path to the rule suitable path
    * a.b[0][1].c => a.b[][].c
    * @param {string} attrPath
    * @returns {XML|string|void|*}
@@ -834,32 +837,9 @@ export default class Model {
   validate(attributes = []) {
     const validators = this.getValidators();
 
-    let attrsToCheck = typeof attributes === 'string' ? [attributes] : attributes;
-
-    if (!attrsToCheck.length) {
-      const _this = this;
-
-      function calc(value, path) {
-        if (Array.isArray(value)) {
-          value.forEach((v, k) => {
-            calc(v, path + `[${k}]`);
-          });
-        } else if (value === Object(value)) {
-          _this.extractObjectRules(path).forEach((k) => {
-            const _path = path + (path && '.') + k;
-
-            calc(_this.get(_path), _path);
-          });
-        }
-
-        if (path) {
-          attrsToCheck.push(path);
-        }
-      }
-
-      // calculate all the fields required to validate
-      calc(this.attributes.toJS(), '');
-    }
+    let attrsToCheck = typeof attributes === 'string'
+      ? [attributes]
+      : (attributes.length ? attributes : this.calcAttrsToCheck());
 
     const jobs = [];
 
@@ -876,6 +856,38 @@ export default class Model {
 
       return Promise.resolve(true);
     });
+  }
+
+  /**
+   * Determines a list of attributes which should be validated
+   * @returns {Array}
+   */
+  calcAttrsToCheck() {
+    const attrs = [];
+
+    const _this = this;
+
+    function calc(value, path) {
+      if (path) {
+        attrs.push(path);
+      }
+
+      if (Array.isArray(value)) {
+        value.forEach((v, k) => {
+          calc(v, path + `[${k}]`);
+        });
+      } else if (value && (value.constructor === Object)) {
+        _this.extractObjectRules(path).forEach((k) => {
+          const _path = path + (path && '.') + k;
+
+          calc(value[k], _path);
+        });
+      }
+    }
+
+    calc(this.attributes.toJS(), '');
+
+    return attrs;
   }
 
   extractObjectRules(path) {

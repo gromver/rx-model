@@ -4,7 +4,6 @@ import {
 } from '../../validators';
 
 export default class ComplexDataModel extends Model {
-  // правила валидации
   rules() {
     return {
       'simple': new PresenceValidator(),
@@ -20,12 +19,4 @@ export default class ComplexDataModel extends Model {
       ],
     }
   }
-
-  // prepareSourceData(data) {
-  //   return {
-  //     object: {},
-  //     array: [],
-  //     ...data,
-  //   };
-  // }
 }

@@ -77,9 +77,12 @@ describe('Test ValidationStateSubject.js', () => {
     const observable = model.getValidationObservable();
 
     observable.whenUnvalidated(['presence', 'url', 'multi']).subscribe(observer);
+
+    model.invalidateValidators();
+    expect(observer).toHaveBeenCalledTimes(0);
+
     await model.validate();
     model.invalidateValidators();
-    await model.validate();
 
     expect(observer).toHaveBeenCalledTimes(3);
     expect(observer.mock.calls[0][0]).toEqual(expect.any(UnvalidatedState));
