@@ -593,16 +593,25 @@ export default class Model {
   }
 
   /**
-   * Get attributes object
+   * Get attributes object processed by prepareResultData()
+   * @param {boolean} isPrepared - is prepare model attributes's data
    * @returns {{}}
    */
-  getAttributes() {
-    return this.prepareResultData(this.attributes.toJS());
+  getAttributes(isPrepared = true) {
+    return isPrepared ? this.prepareResultData(this.attributes.toJS()) : this.attributes.toJS();
   }
 
   /**
    * State getters/setters
    */
+
+  /**
+   * Get initial attributes object
+   * @returns {{}}
+   */
+  getInitialAttributes() {
+    return this.initialAttributes.toJS();
+  }
 
   /**
    * Get initial attribute value
