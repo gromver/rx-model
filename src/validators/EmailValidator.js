@@ -26,6 +26,8 @@ export default class EmailValidator extends Validator {
     if (!EmailValidator.PATTERN.exec(value)) {
       return Promise.reject(message);
     }
+
+    return Promise.resolve();
   }
 }
 
